@@ -11,7 +11,7 @@ A clean, minimal weather app built with React. Search any city in the world and 
 - 📅 7-day forecast
 - 🎨 Background changes based on the weather (sunny, rainy, stormy, snowy…)
 - 🏙️ Popular city shortcuts on the home screen
-- ⚡ No API key required — uses the free Open-Meteo API
+- ⚡ No API key required — uses the free Open-Meteo API (https://open-meteo.com/)
 
 ---
 
