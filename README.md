@@ -22,5 +22,10 @@ Try typing the name of your favourite anime and see what happens.
 
 ---
 
-© 2026 Peak Weather — By Shivansh Pandey
+## Deployed
 
+https://peakweather.netlify.app/
+
+---
+
+© 2026 Peak Weather — By Shivansh Pandey
