@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Mountain } from "lucide-react";
-import { getWeather, getCoordinates } from "./services/api";
+import { getWeather, getCoordinates, getCityFromCoords } from "./services/api";
 import SearchBar from "./components/SearchBar";
 import WeatherCard from "./components/WeatherCard";
 import PopularCities from "./components/PopularCities";
 import FloatingElements from "./components/FloatingElements";
+import WeatherEffectsCanvas from "./components/WeatherEffectsCanvas";
+import SkeletonCard from "./components/SkeletonCard";
 import "./App.css";
 
 const getBackgroundGradient = (code) => {
@@ -30,8 +32,65 @@ function App() {
   const [city, setCity] = useState("");
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
   const [error, setError] = useState("");
-  const [easterEggType, setEasterEggType] = useState(null); // 'onepiece' | 'aot' | 'naruto' | 'boruto' | 'sololeveling' | 'deathnote' | 'jjk' | 'chainsawman' | 'gojo' | 'bluelock' | 'vinlandsaga' | 'bleach' | 'demonslayer' | 'fmab' | 'opm' | 'dandadan' | 'dbz' | 'haikyu' | 'gintama' | 'highschooldxd' | 'hxh' | 'mha' | 'jojo' | 'kaiju' | 'gachiakuta' | 'mushoku' | 'rezero' | 'blackclover' | 'drstone' | 'fireforce' | 'windbreaker' | 'spyxfamily' | 'slime' | 'suzume' | 'yourname' | 'silentvoice' | 'cote' | 'dressupdarling' | 'codegeass' | 'frieren' | 'monster' | 'apothecary' | 'pancreas' | 'yourlieinapril' | 'baki' | 'berserk' | 'fairytail' | 'sentencedhero' | 'kaguyasama' | 'graveoffireflies' | 'madara' | 'shanks' | 'toji' | 'tokyoghoul' | 'sevendeadlysins' | 'assassinationclassroom' | null
+  const [unit, setUnit] = useState(() => {
+    return localStorage.getItem("peak_weather_unit") || "C";
+  });
+  const [easterEggType, setEasterEggType] = useState(null);
+
+  const toggleUnit = () => {
+    const nextUnit = unit === "C" ? "F" : "C";
+    setUnit(nextUnit);
+    localStorage.setItem("peak_weather_unit", nextUnit);
+  };
+
+  const convertTemp = (tempInC) => {
+    if (tempInC === undefined || tempInC === null) return "--";
+    if (unit === "F") {
+      return Math.round((tempInC * 9) / 5 + 32);
+    }
+    return Math.round(tempInC);
+  };
+
+  const handleLocateMe = () => {
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported by your browser.");
+      return;
+    }
+    setIsLocating(true);
+    setLoading(true);
+    setError("");
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const detectedCity = await getCityFromCoords(latitude, longitude);
+          const weatherData = await getWeather(latitude, longitude);
+
+          setCity(detectedCity);
+          setWeather({
+            name: detectedCity,
+            current: weatherData.current,
+            daily: weatherData.daily,
+            hourly: weatherData.hourly,
+          });
+        } catch {
+          setError("Unable to fetch weather for your location.");
+        } finally {
+          setLoading(false);
+          setIsLocating(false);
+        }
+      },
+      () => {
+        setError("Location permission denied or unavailable.");
+        setLoading(false);
+        setIsLocating(false);
+      },
+      { timeout: 10000 }
+    );
+  }; // 'onepiece' | 'aot' | 'naruto' | 'boruto' | 'sololeveling' | 'deathnote' | 'jjk' | 'chainsawman' | 'gojo' | 'bluelock' | 'vinlandsaga' | 'bleach' | 'demonslayer' | 'fmab' | 'opm' | 'dandadan' | 'dbz' | 'haikyu' | 'gintama' | 'highschooldxd' | 'hxh' | 'mha' | 'jojo' | 'kaiju' | 'gachiakuta' | 'mushoku' | 'rezero' | 'blackclover' | 'drstone' | 'fireforce' | 'windbreaker' | 'spyxfamily' | 'slime' | 'suzume' | 'yourname' | 'silentvoice' | 'cote' | 'dressupdarling' | 'codegeass' | 'frieren' | 'monster' | 'apothecary' | 'pancreas' | 'yourlieinapril' | 'baki' | 'berserk' | 'fairytail' | 'sentencedhero' | 'kaguyasama' | 'graveoffireflies' | 'madara' | 'shanks' | 'toji' | 'tokyoghoul' | 'sevendeadlysins' | 'assassinationclassroom' | null
 
   const handleSearch = async (searchCity) => {
     if (!searchCity) return;
@@ -752,9 +811,10 @@ function App() {
       setWeather({
         name,
         current: weatherData.current,
-        daily: weatherData.daily
+        daily: weatherData.daily,
+        hourly: weatherData.hourly,
       });
-    } catch (err) {
+    } catch {
       setError("Failed to fetch weather data.");
     } finally {
       setLoading(false);
@@ -914,6 +974,10 @@ function App() {
         style={weather ? { background: bgGradient } : {}}
       />
 
+      {weather?.current && (
+        <WeatherEffectsCanvas weatherCode={weather.current.weather_code} />
+      )}
+
       <div className="content-wrapper">
         <motion.div
           className="title-container"
@@ -925,23 +989,29 @@ function App() {
             <Mountain className="title-icon" size={40} />
             Peak Weather
           </h1>
+          <button
+            type="button"
+            className="unit-toggle-pill glass"
+            onClick={toggleUnit}
+            title="Toggle °C / °F"
+            aria-label="Toggle Celsius and Fahrenheit"
+          >
+            <span className={unit === "C" ? "active-unit" : ""}>°C</span>
+            <span className="unit-divider">|</span>
+            <span className={unit === "F" ? "active-unit" : ""}>°F</span>
+          </button>
         </motion.div>
 
-        <SearchBar city={city} setCity={setCity} onSearch={handleSearch} />
+        <SearchBar
+          city={city}
+          setCity={setCity}
+          onSearch={handleSearch}
+          onLocateMe={handleLocateMe}
+          isLocating={isLocating}
+        />
 
         <AnimatePresence mode="wait">
-          {loading && (
-            <motion.div
-              key="loading"
-              className="loading-text"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <Loader2 className="loading-spinner" size={24} />
-              <span>Fetching forecasts...</span>
-            </motion.div>
-          )}
+          {loading && <SkeletonCard key="loading" />}
 
           {error && (
             <motion.div
@@ -964,7 +1034,11 @@ function App() {
               transition={{ duration: 0.5 }}
               style={{ width: "100%" }}
             >
-              <WeatherCard weather={weather} />
+              <WeatherCard
+                weather={weather}
+                unit={unit}
+                convertTemp={convertTemp}
+              />
             </motion.div>
           )}
 

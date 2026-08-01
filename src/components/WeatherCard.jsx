@@ -10,8 +10,14 @@ import {
   Sun, 
   Thermometer, 
   Wind,
-  SunDim
+  SunDim,
+  Sunrise,
+  Sunset,
+  Gauge,
+  Eye,
+  Share2
 } from "lucide-react";
+import HourlyForecast from "./HourlyForecast";
 
 const getWeatherDetails = (code) => {
   if (code === 0) return { label: "Clear Sky", icon: Sun, color: "#fbbf24" };
@@ -29,18 +35,43 @@ const getDayName = (dateString) => {
   return date.toLocaleDateString('en-US', { weekday: 'short' });
 };
 
-function WeatherCard({ weather }) {
+const formatTime = (isoString) => {
+  if (!isoString) return "--:--";
+  const date = new Date(isoString);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+export default function WeatherCard({ weather, unit, convertTemp }) {
   if (!weather || !weather.current) return null;
 
-  const { current, daily, name } = weather;
+  const { current, daily, hourly, name } = weather;
   const { icon: MainIcon, label: mainLabel, color: mainColor } = getWeatherDetails(current.weather_code);
+
+  const handleShare = async () => {
+    const temp = convertTemp(current.temperature_2m);
+    const text = `Current weather in ${name}: ${temp}°${unit}, ${mainLabel}! Checked via Peak Weather.`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Peak Weather - ${name}`,
+          text,
+          url: window.location.href,
+        });
+      } catch (err) {
+        console.warn("Share cancelled:", err);
+      }
+    } else {
+      navigator.clipboard.writeText(text);
+      alert("Weather details copied to clipboard!");
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: { 
       opacity: 1, 
       scale: 1,
-      transition: { duration: 0.5, staggerChildren: 0.1 }
+      transition: { duration: 0.5, staggerChildren: 0.08 }
     }
   };
 
@@ -48,6 +79,11 @@ function WeatherCard({ weather }) {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
   };
+
+  const sunriseTime = daily?.sunrise?.[0] ? formatTime(daily.sunrise[0]) : null;
+  const sunsetTime = daily?.sunset?.[0] ? formatTime(daily.sunset[0]) : null;
+  const pressure = current?.surface_pressure ? `${Math.round(current.surface_pressure)} hPa` : null;
+  const visibility = current?.visibility ? `${(current.visibility / 1000).toFixed(1)} km` : null;
 
   return (
     <motion.div 
@@ -58,18 +94,31 @@ function WeatherCard({ weather }) {
     >
       {/* Main Current Weather */}
       <motion.div className="main-card" variants={itemVariants}>
-        <h2 className="city-name">{name}</h2>
-        <div className="temp-container">
-          <span className="temperature">{Math.round(current.temperature_2m)}</span>
-          <span className="temp-unit">°C</span>
+        <div className="main-card-top">
+          <h2 className="city-name">{name}</h2>
+          <button 
+            type="button" 
+            className="share-btn glass" 
+            onClick={handleShare} 
+            title="Share Weather"
+            aria-label="Share Weather"
+          >
+            <Share2 size={18} />
+          </button>
         </div>
+
+        <div className="temp-container">
+          <span className="temperature">{convertTemp(current.temperature_2m)}</span>
+          <span className="temp-unit">°{unit}</span>
+        </div>
+
         <div className="weather-desc">
           <MainIcon size={32} color={mainColor} />
           <span>{mainLabel}</span>
         </div>
       </motion.div>
 
-      <div>
+      <div className="dashboard-right">
         {/* Details Grid */}
         <motion.div className="details-grid" variants={itemVariants}>
           <div className="detail-item glass">
@@ -78,7 +127,7 @@ function WeatherCard({ weather }) {
             </div>
             <div className="detail-info">
               <span className="detail-label">Feels Like</span>
-              <span className="detail-value">{Math.round(current.apparent_temperature)}°</span>
+              <span className="detail-value">{convertTemp(current.apparent_temperature)}°{unit}</span>
             </div>
           </div>
           
@@ -108,10 +157,61 @@ function WeatherCard({ weather }) {
             </div>
             <div className="detail-info">
               <span className="detail-label">Max UV Index</span>
-              <span className="detail-value">{daily.uv_index_max[0]}</span>
+              <span className="detail-value">{daily?.uv_index_max?.[0] ?? '--'}</span>
             </div>
           </div>
+
+          {sunriseTime && (
+            <div className="detail-item glass">
+              <div className="detail-icon-wrapper">
+                <Sunrise size={24} color="#f59e0b" />
+              </div>
+              <div className="detail-info">
+                <span className="detail-label">Sunrise</span>
+                <span className="detail-value">{sunriseTime}</span>
+              </div>
+            </div>
+          )}
+
+          {sunsetTime && (
+            <div className="detail-item glass">
+              <div className="detail-icon-wrapper">
+                <Sunset size={24} color="#ec4899" />
+              </div>
+              <div className="detail-info">
+                <span className="detail-label">Sunset</span>
+                <span className="detail-value">{sunsetTime}</span>
+              </div>
+            </div>
+          )}
+
+          {pressure && (
+            <div className="detail-item glass">
+              <div className="detail-icon-wrapper">
+                <Gauge size={24} color="#34d399" />
+              </div>
+              <div className="detail-info">
+                <span className="detail-label">Pressure</span>
+                <span className="detail-value">{pressure}</span>
+              </div>
+            </div>
+          )}
+
+          {visibility && (
+            <div className="detail-item glass">
+              <div className="detail-icon-wrapper">
+                <Eye size={24} color="#38bdf8" />
+              </div>
+              <div className="detail-info">
+                <span className="detail-label">Visibility</span>
+                <span className="detail-value">{visibility}</span>
+              </div>
+            </div>
+          )}
         </motion.div>
+
+        {/* 24-Hour Hourly Forecast Slider */}
+        <HourlyForecast hourly={hourly} unit={unit} convertTemp={convertTemp} />
 
         {/* 7-Day Forecast */}
         <motion.div className="forecast-section glass" variants={itemVariants}>
@@ -120,7 +220,7 @@ function WeatherCard({ weather }) {
             <span>7-Day Forecast</span>
           </div>
           <div className="forecast-list">
-            {daily.time.slice(1).map((date, index) => {
+            {daily?.time?.slice(1).map((date, index) => {
               const code = daily.weather_code[index + 1];
               const { icon: DayIcon, color: dayColor, label } = getWeatherDetails(code);
               return (
@@ -131,8 +231,8 @@ function WeatherCard({ weather }) {
                     <span>{label}</span>
                   </div>
                   <div className="forecast-temps">
-                    <span className="temp-min">{Math.round(daily.temperature_2m_min[index + 1])}°</span>
-                    <span className="temp-max">{Math.round(daily.temperature_2m_max[index + 1])}°</span>
+                    <span className="temp-min">{convertTemp(daily.temperature_2m_min[index + 1])}°</span>
+                    <span className="temp-max">{convertTemp(daily.temperature_2m_max[index + 1])}°</span>
                   </div>
                 </div>
               );
@@ -143,5 +243,3 @@ function WeatherCard({ weather }) {
     </motion.div>
   );
 }
-
-export default WeatherCard;
