@@ -1,0 +1,16 @@
+{
+  "short_name": "Peak Weather",
+  "name": "Peak Weather — Live Forecasts & Anime Easter Eggs",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f2027",
+  "theme_color": "#0f2027",
+  "display": "standalone",
+  "orientation": "portrait-primary"
+}

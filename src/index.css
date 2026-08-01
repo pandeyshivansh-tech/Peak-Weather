@@ -15,11 +15,16 @@
   padding: 0;
 }
 
-body {
+html, body {
   font-family: var(--font-primary);
   color: var(--text-primary);
-  background-color: #0f172a;
+  background-color: #0f2027;
+  background: #0f2027;
   min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
