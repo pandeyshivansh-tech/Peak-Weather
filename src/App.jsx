@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Mountain } from "lucide-react";
+import { Loader2, Mountain, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { getWeather, getCoordinates, getCityFromCoords } from "./services/api";
 import SearchBar from "./components/SearchBar";
 import WeatherCard from "./components/WeatherCard";
@@ -8,7 +8,68 @@ import PopularCities from "./components/PopularCities";
 import FloatingElements from "./components/FloatingElements";
 import WeatherEffectsCanvas from "./components/WeatherEffectsCanvas";
 import SkeletonCard from "./components/SkeletonCard";
+import CursorAura from "./components/CursorAura";
+import AnimeVaultModal from "./components/AnimeVaultModal";
 import "./App.css";
+
+const ANIME_TITLES = {
+  toji: "Toji Fushiguro",
+  gojo: "Gojo Satoru",
+  sukuna: "Ryomen Sukuna",
+  jjk: "Jujutsu Kaisen",
+  sololeveling: "Solo Leveling",
+  chainsawman: "Chainsaw Man",
+  onepiece: "One Piece",
+  shanks: "Red-Haired Shanks",
+  aot: "Attack on Titan",
+  deathnote: "Death Note",
+  naruto: "Naruto Shippuden",
+  madara: "Madara Uchiha",
+  boruto: "Boruto",
+  bleach: "Bleach",
+  bluelock: "Blue Lock",
+  berserk: "Berserk",
+  baki: "Baki Hanma",
+  tokyoghoul: "Tokyo Ghoul",
+  dbz: "Dragon Ball Z",
+  opm: "One Punch Man",
+  dandadan: "Dandadan",
+  fmab: "Fullmetal Alchemist",
+  hxh: "Hunter x Hunter",
+  mha: "My Hero Academia",
+  jojo: "JoJo's Bizarre Adventure",
+  kaiju: "Kaiju No. 8",
+  gachiakuta: "Gachiakuta",
+  fireforce: "Fire Force",
+  blackclover: "Black Clover",
+  drstone: "Dr. Stone",
+  windbreaker: "Wind Breaker",
+  codegeass: "Code Geass",
+  monster: "Monster",
+  frieren: "Frieren",
+  apothecary: "The Apothecary Diaries",
+  rezero: "Re:Zero",
+  mushoku: "Mushoku Tensei",
+  slime: "That Time I Got Reincarnated as a Slime",
+  spyxfamily: "Spy x Family",
+  dressupdarling: "My Dress-Up Darling",
+  cote: "Classroom of the Elite",
+  kaguyasama: "Kaguya-sama: Love is War",
+  highschooldxd: "High School DxD",
+  gintama: "Gintama",
+  haikyuu: "Haikyu!!",
+  yourname: "Your Name",
+  suzume: "Suzume",
+  silentvoice: "A Silent Voice",
+  pancreas: "I Want to Eat Your Pancreas",
+  yourlie: "Your Lie in April",
+  graveoffireflies: "Grave of the Fireflies",
+  fairytail: "Fairy Tail",
+  sevendeadlysins: "Seven Deadly Sins",
+  assassinationclassroom: "Assassination Classroom",
+  sentencedhero: "Sentenced to Be a Hero",
+  pakistan: "Pakistan",
+};
 
 const getBackgroundGradient = (code) => {
   // Clear
@@ -38,6 +99,9 @@ function App() {
     return localStorage.getItem("peak_weather_unit") || "C";
   });
   const [easterEggType, setEasterEggType] = useState(null);
+  const [isVaultOpen, setIsVaultOpen] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const videoRef = useRef(null);
 
   const toggleUnit = () => {
     const nextUnit = unit === "C" ? "F" : "C";
@@ -52,6 +116,12 @@ function App() {
     }
     return Math.round(tempInC);
   };
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted;
+    }
+  }, [isMuted, easterEggType]);
 
   const handleLocateMe = () => {
     if (!navigator.geolocation) {
@@ -195,6 +265,8 @@ function App() {
     if (
       normalizedSearch.includes("toji") ||
       normalizedSearch.includes("sorcererkiller") ||
+      normalizedSearch.includes("papaguro") ||
+      normalizedSearch.includes("heavenlyrestriction") ||
       (normalizedSearch.includes("fushiguro") && normalizedSearch.includes("toji")) ||
       (normalizedSearch.includes("zenin") && normalizedSearch.includes("toji"))
     ) {
@@ -827,7 +899,6 @@ function App() {
 
   if (easterEggType) {
     let videoSrc = "";
-    let isMuted = false;
 
     if (easterEggType === "onepiece") {
       videoSrc = "/onepiece.mp4";
@@ -949,16 +1020,47 @@ function App() {
 
     return (
       <div className="easter-egg-container">
-        <button
-          className="close-easter-egg glass"
-          onClick={() => {
-            setEasterEggType(null);
-            setCity(""); // Reset to default
-          }}
-        >
-          Exit Peak
-        </button>
+        <div className="easter-egg-top-bar">
+          <div className="easter-egg-info glass">
+            <span className="live-dot"></span>
+            <span className="easter-egg-title">
+              {ANIME_TITLES[easterEggType] || easterEggType.toUpperCase()}
+            </span>
+          </div>
+          <div className="easter-egg-actions">
+            <button
+              type="button"
+              className="easter-egg-control-btn glass"
+              onClick={() => {
+                const nextState = !isMuted;
+                setIsMuted(nextState);
+                if (videoRef.current) {
+                  videoRef.current.muted = nextState;
+                  if (!nextState) {
+                    videoRef.current.volume = 1;
+                    videoRef.current.play().catch(() => {});
+                  }
+                }
+              }}
+              title={isMuted ? "Unmute Audio" : "Mute Audio"}
+            >
+              {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+              <span>{isMuted ? "Unmute" : "Mute"}</span>
+            </button>
+            <button
+              type="button"
+              className="close-easter-egg glass"
+              onClick={() => {
+                setEasterEggType(null);
+                setCity(""); // Reset to default
+              }}
+            >
+              Exit Peak
+            </button>
+          </div>
+        </div>
         <video
+          ref={videoRef}
           src={videoSrc}
           autoPlay loop muted={isMuted} playsInline
           className="easter-egg-iframe"
@@ -969,6 +1071,8 @@ function App() {
 
   return (
     <div className="app-container">
+      <CursorAura />
+
       <div
         className={`bg-wrapper ${!weather ? 'home-bg' : ''}`}
         style={weather ? { background: bgGradient } : {}}
@@ -989,17 +1093,30 @@ function App() {
             <Mountain className="title-icon" size={40} />
             Peak Weather
           </h1>
-          <button
-            type="button"
-            className="unit-toggle-pill glass"
-            onClick={toggleUnit}
-            title="Toggle °C / °F"
-            aria-label="Toggle Celsius and Fahrenheit"
-          >
-            <span className={unit === "C" ? "active-unit" : ""}>°C</span>
-            <span className="unit-divider">|</span>
-            <span className={unit === "F" ? "active-unit" : ""}>°F</span>
-          </button>
+          
+          <div className="header-actions">
+            <button
+              type="button"
+              className="vault-trigger-btn glass"
+              onClick={() => setIsVaultOpen(true)}
+              title="Open Peak Anime Vault (50+ High Quality Edits)"
+            >
+              <Sparkles size={16} className="sparkle-icon" />
+              <span>Anime Vault</span>
+            </button>
+
+            <button
+              type="button"
+              className="unit-toggle-pill glass"
+              onClick={toggleUnit}
+              title="Toggle °C / °F"
+              aria-label="Toggle Celsius and Fahrenheit"
+            >
+              <span className={unit === "C" ? "active-unit" : ""}>°C</span>
+              <span className="unit-divider">|</span>
+              <span className={unit === "F" ? "active-unit" : ""}>°F</span>
+            </button>
+          </div>
         </motion.div>
 
         <SearchBar
@@ -1044,6 +1161,8 @@ function App() {
 
           {!loading && !error && !weather && (
             <PopularCities
+              unit={unit}
+              convertTemp={convertTemp}
               onCityClick={(selectedCity) => {
                 setCity(selectedCity);
                 handleSearch(selectedCity);
@@ -1054,6 +1173,12 @@ function App() {
       </div>
 
       {!weather && <FloatingElements />}
+
+      <AnimeVaultModal
+        isOpen={isVaultOpen}
+        onClose={() => setIsVaultOpen(false)}
+        onSelectAnime={(animeId) => setEasterEggType(animeId)}
+      />
 
       <footer>
         <p>© 2026 Peak Weather — By Shivansh Pandey. All Rights Reserved.</p>

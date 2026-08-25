@@ -1031,3 +1031,673 @@ footer p {
 .skeleton-item {
   height: 90px;
 }
+
+/* =========================================
+   HEADER ACTIONS & VAULT TRIGGER
+========================================= */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.vault-trigger-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 50px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(236, 72, 153, 0.25));
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  color: #ffffff;
+  font-family: var(--font-primary);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
+  transition: all 0.25s ease;
+  user-select: none;
+}
+
+.vault-trigger-btn:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.4), rgba(236, 72, 153, 0.4));
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.45);
+}
+
+.sparkle-icon {
+  color: #fbbf24;
+  animation: pulse-sparkle 2s infinite ease-in-out;
+}
+
+@keyframes pulse-sparkle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.2) rotate(15deg); }
+}
+
+/* =========================================
+   CURSOR AURA (Desktop)
+========================================= */
+.cursor-aura-boundary {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 999;
+  contain: strict;
+}
+
+.cursor-aura {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 380px;
+  height: 380px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, rgba(129, 140, 248, 0.04) 50%, transparent 75%);
+  pointer-events: none;
+  filter: blur(20px);
+  mix-blend-mode: screen;
+  transition: opacity 0.3s ease;
+}
+
+/* =========================================
+   3D TILT CARDS & SPECULAR SHEEN
+========================================= */
+.tilt-card-wrapper {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+  will-change: transform;
+}
+
+.tilt-specular-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 10;
+  mix-blend-mode: overlay;
+  transition: opacity 0.2s ease;
+}
+
+.main-card-tilt {
+  width: 100%;
+}
+
+.detail-item-tilt {
+  width: 100%;
+}
+
+/* Live weather indicator */
+.city-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.live-weather-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #22c55e;
+  box-shadow: 0 0 10px #22c55e;
+  animation: live-blink 1.5s infinite;
+}
+
+@keyframes live-blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* =========================================
+   SUN & CELESTIAL ARC WIDGET
+========================================= */
+.sun-arc-widget {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sun-arc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+}
+
+.sun-arc-status {
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fbbf24;
+  font-size: 0.72rem;
+}
+
+.sun-arc-svg-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.sun-arc-svg {
+  width: 100%;
+  max-width: 250px;
+  height: 80px;
+  overflow: visible;
+}
+
+.sun-arc-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sun-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* =========================================
+   DYNAMIC 24-HOUR WAVE CHART
+========================================= */
+.forecast-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.view-mode-toggle {
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  gap: 2px;
+}
+
+.view-mode-toggle button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-mode-toggle button.active {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.hourly-chart-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.chart-active-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 16px;
+  border-radius: 30px;
+  align-self: flex-start;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.pill-hour {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.pill-temp {
+  color: #38bdf8;
+  font-weight: 800;
+}
+
+.pill-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.svg-wave-wrapper {
+  position: relative;
+  width: 100%;
+  height: 130px;
+}
+
+.hourly-wave-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.active-scrubber-dot {
+  filter: drop-shadow(0 0 10px #38bdf8);
+}
+
+.wave-time-labels {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  right: 0;
+  height: 20px;
+  pointer-events: none;
+}
+
+.wave-time-labels span {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+}
+
+/* 7-Day Temp Range Bar */
+.temp-bar-bg {
+  flex: 1;
+  max-width: 70px;
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  margin: 0 8px;
+}
+
+.temp-bar-fill {
+  width: 65%;
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #fbbf24);
+  border-radius: 4px;
+}
+
+/* =========================================
+   ANIME VAULT MODAL (SIMPLIFIED & CLEAN)
+========================================= */
+.vault-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(14px);
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.vault-modal {
+  width: 100%;
+  max-width: 860px;
+  max-height: 85vh;
+  border-radius: 24px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 35px rgba(245, 158, 11, 0.15);
+}
+
+.vault-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.vault-title-box h2 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+  background: linear-gradient(135deg, #fbbf24, #f43f5e, #c084fc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.vault-title-box p {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.vault-close-btn {
+  padding: 8px;
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vault-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.vault-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vault-search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.vault-search-icon {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.vault-search-wrapper input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: white;
+  font-family: inherit;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.vault-clear-search {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+.vault-category-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.vault-category-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.vault-cat-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.vault-cat-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+}
+
+.vault-cat-pill.active {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.35), rgba(236, 72, 153, 0.35));
+  border-color: rgba(251, 191, 36, 0.5);
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+}
+
+.vault-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  overflow-y: auto;
+  padding-right: 4px;
+  max-height: 52vh;
+}
+
+.vault-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.vault-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
+.vault-card {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.vault-card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(251, 191, 36, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 0 15px rgba(245, 158, 11, 0.15);
+}
+
+.vault-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vault-card-name {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+
+.vault-card-anime {
+  font-size: 0.78rem;
+  color: #38bdf8;
+  font-weight: 500;
+  margin: 0;
+}
+
+.vault-card-play-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.vault-card:hover .vault-card-play-icon {
+  background: #fbbf24;
+  color: #0f172a;
+  transform: scale(1.1);
+}
+
+.vault-empty {
+  grid-column: 1 / -1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* =========================================
+   EASTER EGG TOP BAR & CONTROLS
+========================================= */
+.easter-egg-top-bar {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  right: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10001;
+  pointer-events: auto;
+}
+
+.easter-egg-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-radius: 50px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.easter-egg-title {
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  color: #ffffff;
+}
+
+.easter-egg-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.easter-egg-control-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 50px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  font-family: var(--font-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+
+.easter-egg-control-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.easter-egg-container .close-easter-egg {
+  position: static;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .header-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .vault-modal {
+    padding: 18px;
+    max-height: 92vh;
+    border-radius: 20px;
+  }
+
+  .vault-title-box h2 {
+    font-size: 1.4rem;
+  }
+
+  .vault-grid {
+    grid-template-columns: 1fr;
+    max-height: 56vh;
+  }
+
+  .easter-egg-top-bar {
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .easter-egg-info {
+    padding: 6px 14px;
+  }
+
+  .easter-egg-title {
+    font-size: 0.75rem;
+  }
+
+  .easter-egg-control-btn {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+  }
+
+  .forecast-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

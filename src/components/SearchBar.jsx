@@ -107,12 +107,17 @@ export default function SearchBar({ city, setCity, onSearch, onLocateMe, isLocat
           className="search-input"
           autoComplete="off"
           spellCheck="false"
+          aria-label="Search city or anime"
         />
         {inputValue && (
           <button
             type="button"
             className="clear-search-btn"
-            onClick={() => { setInputValue(""); setCity(""); setShowHistory(false); }}
+            onClick={() => {
+              setInputValue("");
+              setCity("");
+              setShowHistory(false);
+            }}
             aria-label="Clear search"
           >
             <X size={16} />
@@ -120,15 +125,16 @@ export default function SearchBar({ city, setCity, onSearch, onLocateMe, isLocat
         )}
         <button
           type="button"
-          className={`locate-me-btn ${isLocating ? 'locating' : ''}`}
+          className={`locate-me-btn ${isLocating ? "locating" : ""}`}
           onClick={() => {
             setShowHistory(false);
             onLocateMe();
           }}
           title="Use my current location"
           aria-label="Use my current location"
+          disabled={isLocating}
         >
-          <MapPin size={20} />
+          <MapPin size={20} className={isLocating ? "pulse-icon" : ""} />
         </button>
       </div>
 
@@ -156,6 +162,7 @@ export default function SearchBar({ city, setCity, onSearch, onLocateMe, isLocat
                   type="button"
                   className="remove-history-btn"
                   onClick={(e) => handleClearHistoryItem(e, item)}
+                  title="Remove from history"
                 >
                   <X size={14} />
                 </button>
