@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Mountain, Sparkles, Volume2, VolumeX, LogOut } from "lucide-react";
+import { Loader2, Mountain, Sparkles, Volume2, VolumeX, LogOut, Key } from "lucide-react";
 import { getWeather, getCoordinates, getCityFromCoords } from "./services/api";
 import SearchBar from "./components/SearchBar";
 import WeatherCard from "./components/WeatherCard";
@@ -156,10 +156,125 @@ function App() {
   const [unit, setUnit] = useState(() => {
     return localStorage.getItem("peak_weather_unit") || "C";
   });
-  const [easterEggType, setEasterEggType] = useState(null);
+  const [easterEggType, setEasterEggTypeState] = useState(null);
   const [isVaultOpen, setIsVaultOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const videoRef = useRef(null);
+
+  const [discoveredAnime, setDiscoveredAnime] = useState(() => {
+    try {
+      const saved = localStorage.getItem("peak_weather_discovered_anime");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {
+      console.warn("Storage read error:", e);
+    }
+    return [];
+  });
+
+  const [isVaultUnlocked, setIsVaultUnlocked] = useState(() => {
+    try {
+      return localStorage.getItem("peak_weather_vault_master_unlocked") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const [isNewDiscovery, setIsNewDiscovery] = useState(false);
+  const [showMilestoneToast, setShowMilestoneToast] = useState(false);
+  const [prevStandardCount, setPrevStandardCount] = useState(() => {
+    try {
+      const saved = localStorage.getItem("peak_weather_discovered_anime");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((id) => !["toji", "gojo", "sukuna", "madara", "shanks"].includes(id)).length;
+        }
+      }
+    } catch {}
+    return 0;
+  });
+
+  // Auto-collapse discovery badge back to just title after 3 seconds
+  useEffect(() => {
+    if (isNewDiscovery) {
+      const timer = setTimeout(() => {
+        setIsNewDiscovery(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isNewDiscovery]);
+
+  // Check if standard discoveries just reached 10
+  useEffect(() => {
+    const standardCount = discoveredAnime.filter(
+      (id) => !["toji", "gojo", "sukuna", "madara", "shanks"].includes(id)
+    ).length;
+
+    const hasSeen10Milestone = localStorage.getItem("peak_weather_milestone_10_notified") === "true";
+
+    if (standardCount >= 10 && (!hasSeen10Milestone || (prevStandardCount < 10 && standardCount >= 10))) {
+      setShowMilestoneToast(true);
+      try {
+        localStorage.setItem("peak_weather_milestone_10_notified", "true");
+      } catch {}
+
+      const timer = setTimeout(() => {
+        setShowMilestoneToast(false);
+      }, 10000);
+
+      return () => clearTimeout(timer);
+    }
+    setPrevStandardCount(standardCount);
+  }, [discoveredAnime, prevStandardCount]);
+
+  // Sync discoveries to localStorage whenever updated
+  useEffect(() => {
+    try {
+      localStorage.setItem("peak_weather_discovered_anime", JSON.stringify(discoveredAnime));
+    } catch (e) {
+      console.warn("Storage sync error:", e);
+    }
+  }, [discoveredAnime]);
+
+  // Handle ESC key to exit active anime edit
+  useEffect(() => {
+    if (!easterEggType) return;
+
+    const handleGlobalKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setEasterEggType(null);
+        setCity("");
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [easterEggType]);
+
+  const markDiscovered = (id) => {
+    if (!id || id === "pakistan") return;
+    setDiscoveredAnime((prev) => {
+      if (!prev.includes(id)) {
+        setIsNewDiscovery(true);
+        return [...prev, id];
+      }
+      setIsNewDiscovery(false);
+      return prev;
+    });
+  };
+
+  const setEasterEggType = (id) => {
+    setEasterEggTypeState(id);
+    if (id && id !== "pakistan") {
+      markDiscovered(id);
+    } else {
+      setIsNewDiscovery(false);
+    }
+  };
 
   const toggleUnit = () => {
     const nextUnit = unit === "C" ? "F" : "C";
@@ -976,6 +1091,23 @@ function App() {
             <span className="easter-egg-title">
               {ANIME_TITLES[easterEggType] || easterEggType.toUpperCase()}
             </span>
+            <AnimatePresence>
+              {isNewDiscovery && (
+                <motion.div
+                  className="easter-egg-badge-wrapper"
+                  initial={{ width: 0, opacity: 0, marginLeft: 0 }}
+                  animate={{ width: "auto", opacity: 1, marginLeft: 8 }}
+                  exit={{ width: 0, opacity: 0, marginLeft: 0 }}
+                  transition={{ duration: 0.58, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <span className="easter-egg-discovery-text">
+                    <span className="discovery-dot-sep">•</span>
+                    <Sparkles size={13} className="discovery-sparkle-gold" />
+                    <span className="discovery-gradient-words">Discovered! Added to Vault</span>
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           <div className="easter-egg-actions">
             <button
@@ -1004,6 +1136,7 @@ function App() {
                 setEasterEggType(null);
                 setCity(""); // Reset to default
               }}
+              title="Exit Peak (ESC)"
             >
               <LogOut size={16} />
               <span>Exit Peak</span>
@@ -1124,27 +1257,83 @@ function App() {
         snowfall={weather?.current?.snowfall}
       />
 
-      {/* Floating Mystery Anime Vault Button (Fixed Bottom-Right at all times) */}
-      <motion.button
-        type="button"
-        className="floating-vault-fab glass"
-        onClick={() => setIsVaultOpen(true)}
-        aria-label="Secret Anime Vault"
-        title="✨ Secret Anime Vault"
-        whileHover={{ scale: 1.12, rotate: 8 }}
-        whileTap={{ scale: 0.92 }}
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.4, type: "spring", stiffness: 350, damping: 22 }}
-      >
-        <Sparkles size={24} className="fab-sparkle-icon" />
-        <span className="fab-pulse-aura"></span>
-      </motion.button>
+      {/* Floating Mystery Anime Vault Button & Milestone Popup (Fixed Bottom-Right) */}
+      <div className="floating-vault-container">
+        <AnimatePresence>
+          {showMilestoneToast && (
+            <motion.div
+              className="vault-milestone-toast glass"
+              onClick={() => {
+                setIsVaultOpen(true);
+                setShowMilestoneToast(false);
+              }}
+              initial={{ opacity: 0, x: 60, scale: 0.4 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 60, scale: 0.2 }}
+              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <div className="milestone-toast-icon-wrap">
+                <Key size={16} className="milestone-toast-key" />
+              </div>
+              <div className="milestone-toast-text">
+                <strong>Master Key Unlocked</strong>
+                <span>10 Anime Discovered</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <motion.button
+          type="button"
+          className="floating-vault-fab glass"
+          onClick={() => setIsVaultOpen(true)}
+          aria-label="Secret Anime Vault"
+          title="✨ Secret Anime Vault"
+          whileHover={{ scale: 1.12, rotate: 8 }}
+          whileTap={{ scale: 0.92 }}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.4, type: "spring", stiffness: 350, damping: 22 }}
+        >
+          <Sparkles size={24} className="fab-sparkle-icon" />
+          <span className="fab-pulse-aura"></span>
+          {discoveredAnime.length > 0 && (
+            <span className="fab-discovery-badge">
+              {discoveredAnime.length}
+            </span>
+          )}
+        </motion.button>
+      </div>
 
       <AnimeVaultModal
         isOpen={isVaultOpen}
         onClose={() => setIsVaultOpen(false)}
         onSelectAnime={(animeId) => setEasterEggType(animeId)}
+        discoveredAnime={discoveredAnime}
+        isVaultUnlocked={isVaultUnlocked}
+        onUnlockVault={() => {
+          setIsVaultUnlocked(true);
+          try {
+            localStorage.setItem("peak_weather_vault_master_unlocked", "true");
+          } catch {}
+        }}
+        onLockVault={() => {
+          setIsVaultUnlocked(false);
+          try {
+            localStorage.setItem("peak_weather_vault_master_unlocked", "false");
+          } catch {}
+        }}
+        onResetProgress={() => {
+          setDiscoveredAnime([]);
+          setIsVaultUnlocked(false);
+          setShowMilestoneToast(false);
+          setPrevStandardCount(0);
+          try {
+            localStorage.removeItem("peak_weather_discovered_anime");
+            localStorage.removeItem("peak_weather_vault_master_unlocked");
+            localStorage.removeItem("peak_weather_milestone_10_notified");
+          } catch {}
+        }}
       />
 
       <footer>
