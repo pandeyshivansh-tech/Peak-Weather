@@ -15,7 +15,6 @@ import {
   Sunset,
   Gauge,
   Eye,
-  Share2,
   Compass,
   Moon
 } from "lucide-react";
@@ -72,24 +71,6 @@ export default function WeatherCard({ weather, unit, convertTemp }) {
   const tempVal = convertTemp(rawTemp);
   const feelsLikeVal = convertTemp(rawFeelsLike);
 
-  const handleShare = async () => {
-    const text = `Current weather in ${name}: ${tempVal}°${unit}, ${mainLabel}! Checked via Peak Weather.`;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Peak Weather - ${name}`,
-          text,
-          url: window.location.href,
-        });
-      } catch (err) {
-        console.warn("Share cancelled:", err);
-      }
-    } else {
-      navigator.clipboard.writeText(text);
-      alert("Weather details copied to clipboard!");
-    }
-  };
-
   const containerVariants = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: { 
@@ -132,21 +113,7 @@ export default function WeatherCard({ weather, unit, convertTemp }) {
       <TiltCard className="main-card-tilt" maxTilt={10}>
         <div className="main-card glass">
           <div className="main-card-top">
-            <div className="city-box">
-              <h2 className="city-name">{name}</h2>
-              <span className="live-weather-badge">
-                <span className="live-dot"></span> LIVE
-              </span>
-            </div>
-            <button 
-              type="button" 
-              className="share-btn glass" 
-              onClick={handleShare} 
-              title="Share Weather"
-              aria-label="Share Weather"
-            >
-              <Share2 size={18} />
-            </button>
+            <h2 className="city-name">{name}</h2>
           </div>
 
           <div className="temp-container">

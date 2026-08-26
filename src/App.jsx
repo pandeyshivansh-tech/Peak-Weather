@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Mountain, Sparkles, Volume2, VolumeX } from "lucide-react";
+import { Loader2, Mountain, Sparkles, Volume2, VolumeX, LogOut } from "lucide-react";
 import { getWeather, getCoordinates, getCityFromCoords } from "./services/api";
 import SearchBar from "./components/SearchBar";
 import WeatherCard from "./components/WeatherCard";
@@ -35,6 +35,7 @@ const ANIME_TITLES = {
   opm: "One Punch Man",
   dandadan: "Dandadan",
   fmab: "Fullmetal Alchemist",
+  demonslayer: "Demon Slayer",
   hxh: "Hunter x Hunter",
   mha: "My Hero Academia",
   jojo: "JoJo's Bizarre Adventure",
@@ -46,7 +47,7 @@ const ANIME_TITLES = {
   windbreaker: "Wind Breaker",
   codegeass: "Code Geass",
   monster: "Monster",
-  frieren: "Frieren",
+  frieren: "Frieren: Beyond Journey's End",
   apothecary: "The Apothecary Diaries",
   rezero: "Re:Zero",
   mushoku: "Mushoku Tensei",
@@ -68,25 +69,82 @@ const ANIME_TITLES = {
   sevendeadlysins: "Seven Deadly Sins",
   assassinationclassroom: "Assassination Classroom",
   sentencedhero: "Sentenced to Be a Hero",
-  pakistan: "Pakistan",
+  lookback: "Look Back",
+  weathering: "Weathering With You",
+  mobpsycho: "Mob Psycho 100",
+  pakistan: "Nuclear Blast",
 };
 
-const getBackgroundGradient = (code) => {
-  // Clear
-  if (code === 0) return "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)";
-  // Partly Cloudy
-  if (code >= 1 && code <= 3) return "linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)";
-  // Foggy
-  if (code >= 45 && code <= 48) return "linear-gradient(135deg, #8e9eab 0%, #eef2f3 100%)";
-  // Drizzle / Rain
-  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "linear-gradient(135deg, #2b5876 0%, #4e4376 100%)";
-  // Snow
-  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return "linear-gradient(135deg, #e6e9f0 0%, #eef1f5 100%)";
-  // Thunderstorm
-  if (code >= 95 && code <= 99) return "linear-gradient(135deg, #141e30 0%, #243b55 100%)";
+const getTimeBasedGradient = () => {
+  const hour = new Date().getHours();
+  // Early Morning / Sunrise (5:00 AM - 7:59 AM)
+  if (hour >= 5 && hour < 8) {
+    return "linear-gradient(145deg, #1e3a5f 0%, #2d4a77 40%, #5b3a6e 80%, #0f172a 100%)";
+  }
+  // Morning / Daytime (8:00 AM - 16:29 PM) - Sophisticated deep sapphire/azure
+  if (hour >= 8 && hour < 17) {
+    return "linear-gradient(145deg, #1e3a8a 0%, #1e40af 45%, #0f172a 100%)";
+  }
+  // Golden Hour / Sunset (17:00 PM - 19:29 PM) - Deep rich plum amber
+  if (hour >= 17 && hour < 20) {
+    return "linear-gradient(145deg, #701a75 0%, #4c0519 45%, #0f172a 100%)";
+  }
+  // Twilight / Evening (20:00 PM - 21:59 PM) - Velvet night dusk
+  if (hour >= 20 && hour < 22) {
+    return "linear-gradient(145deg, #1e1b4b 0%, #1e293b 50%, #0b0f19 100%)";
+  }
+  // Midnight / Night (22:00 PM - 4:59 AM) - Cosmic dark slate
+  return "linear-gradient(145deg, #0b132b 0%, #1c2541 50%, #090d16 100%)";
+};
 
-  // Default dark nice gradient
-  return "linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)";
+const getBackgroundGradient = (code, isDay = 1, temperature = null) => {
+  const isFreezing = temperature !== null && temperature !== undefined && temperature <= 0;
+
+  // Polar Arctic Freeze (e.g. Antarctica <= -10°C)
+  if (isFreezing && temperature <= -10) {
+    return isDay !== 0
+      ? "linear-gradient(145deg, #1e3a5f 0%, #2b4c7e 45%, #60a5fa 85%, #dbeafe 100%)"
+      : "linear-gradient(145deg, #070d1e 0%, #0f172a 45%, #1e293b 100%)";
+  }
+
+  // If night time (isDay === 0)
+  if (isDay === 0) {
+    if (isFreezing || (code >= 71 && code <= 77) || (code >= 85 && code <= 86)) {
+      return "linear-gradient(145deg, #0b132b 0%, #172554 45%, #1e3a5f 100%)";
+    }
+    // Clear Night
+    if (code === 0) return "linear-gradient(145deg, #0b132b 0%, #1c2541 50%, #090d16 100%)";
+    // Partly Cloudy / Cloudy Night
+    if (code >= 1 && code <= 3) return "linear-gradient(145deg, #0f172a 0%, #1e293b 50%, #0b0f19 100%)";
+    // Foggy Night
+    if (code >= 45 && code <= 48) return "linear-gradient(145deg, #1f2937 0%, #374151 50%, #111827 100%)";
+    // Drizzle / Rain Night
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "linear-gradient(145deg, #0a1128 0%, #1c2541 50%, #090d16 100%)";
+    // Snow Night
+    if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return "linear-gradient(145deg, #1e293b 0%, #334155 50%, #0f172a 100%)";
+    // Thunderstorm Night
+    if (code >= 95 && code <= 99) return "linear-gradient(145deg, #0b0c10 0%, #1a103c 45%, #050508 100%)";
+    return "linear-gradient(145deg, #0b132b 0%, #1c2541 50%, #090d16 100%)";
+  }
+
+  // Daytime (isDay !== 0) - Warm, radiant, non-glare daytime skies
+  if (isFreezing || (code >= 71 && code <= 77) || (code >= 85 && code <= 86)) {
+    return "linear-gradient(145deg, #1e3a5f 0%, #2b4c7e 45%, #60a5fa 85%, #dbeafe 100%)";
+  }
+  // Clear Sky / Sunny
+  if (code === 0) return "linear-gradient(135deg, #0284c7 0%, #38bdf8 45%, #0369a1 100%)";
+  // Partly Cloudy
+  if (code >= 1 && code <= 3) return "linear-gradient(135deg, #0ea5e9 0%, #3b82f6 50%, #1d4ed8 100%)";
+  // Foggy
+  if (code >= 45 && code <= 48) return "linear-gradient(145deg, #334155 0%, #475569 50%, #1e293b 100%)";
+  // Drizzle / Rain
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "linear-gradient(145deg, #1e293b 0%, #1e3a5f 50%, #0f172a 100%)";
+  // Snow
+  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return "linear-gradient(145deg, #334155 0%, #475569 45%, #1e293b 100%)";
+  // Thunderstorm
+  if (code >= 95 && code <= 99) return "linear-gradient(145deg, #18181b 0%, #2e1065 50%, #09090b 100%)";
+
+  return getTimeBasedGradient();
 };
 
 function App() {
@@ -167,6 +225,24 @@ function App() {
 
     // Easter Egg Check
     const normalizedSearch = searchCity.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+    // Pakistan / Nuclear Easter Egg
+    if (
+      normalizedSearch.includes("pakistan") ||
+      normalizedSearch.includes("lahore") ||
+      normalizedSearch.includes("islamabad") ||
+      normalizedSearch.includes("karachi") ||
+      normalizedSearch.includes("rawalpindi") ||
+      normalizedSearch.includes("peshawar") ||
+      normalizedSearch.includes("quetta") ||
+      normalizedSearch.includes("multan") ||
+      normalizedSearch.includes("faisalabad") ||
+      normalizedSearch.includes("sialkot")
+    ) {
+      setEasterEggType("pakistan");
+      return;
+    }
+
     if (
       normalizedSearch.includes("frieren") ||
       new RegExp("\\bfern\\b", "i").test(searchCity) ||
@@ -738,15 +814,7 @@ function App() {
     }
 
 
-    if (
-      normalizedSearch.includes("pakistan") ||
-      normalizedSearch.includes("lahore") ||
-      normalizedSearch.includes("karachi") ||
-      normalizedSearch.includes("islamabad")
-    ) {
-      setEasterEggType("pakistan");
-      return;
-    }
+
 
     if (
       normalizedSearch.includes("berserk") ||
@@ -894,129 +962,11 @@ function App() {
   };
 
   const bgGradient = weather?.current
-    ? getBackgroundGradient(weather.current.weather_code)
-    : "linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)";
+    ? getBackgroundGradient(weather.current.weather_code, weather.current.is_day, weather.current.temperature_2m)
+    : getTimeBasedGradient();
 
   if (easterEggType) {
-    let videoSrc = "";
-
-    if (easterEggType === "onepiece") {
-      videoSrc = "/onepiece.mp4";
-    } else if (easterEggType === "aot") {
-      videoSrc = "/aot.mp4";
-    } else if (easterEggType === "naruto") {
-      videoSrc = "/naruto.mp4";
-    } else if (easterEggType === "sololeveling") {
-      videoSrc = "/sololeveling.mp4";
-    } else if (easterEggType === "deathnote") {
-      videoSrc = "/deathnote.mp4";
-    } else if (easterEggType === "jjk") {
-      videoSrc = "/jjk.mp4";
-    } else if (easterEggType === "sukuna") {
-      videoSrc = "/sukuna.mp4";
-    } else if (easterEggType === "chainsawman") {
-      videoSrc = "/chainsawman.mp4";
-    } else if (easterEggType === "gojo") {
-      videoSrc = "/gojo.mp4";
-    } else if (easterEggType === "bluelock") {
-      videoSrc = "/bluelock.mp4";
-    } else if (easterEggType === "vinlandsaga") {
-      videoSrc = "/vinlandsaga.mp4";
-    } else if (easterEggType === "bleach") {
-      videoSrc = "/bleach.mp4";
-    } else if (easterEggType === "demonslayer") {
-      videoSrc = "/demonslayer.mp4";
-    } else if (easterEggType === "fmab") {
-      videoSrc = "/fmab.mp4";
-    } else if (easterEggType === "opm") {
-      videoSrc = "/opm.mp4";
-    } else if (easterEggType === "dandadan") {
-      videoSrc = "/dandadan.mp4";
-    } else if (easterEggType === "dbz") {
-      videoSrc = "/dbz.mp4";
-    } else if (easterEggType === "haikyuu") {
-      videoSrc = "/haikyuu.mp4";
-    } else if (easterEggType === "gintama") {
-      videoSrc = "/gintama.mp4";
-    } else if (easterEggType === "highschooldxd") {
-      videoSrc = "/highschooldxd.mp4";
-    } else if (easterEggType === "pakistan") {
-      videoSrc = "/pakistan.mp4";
-    } else if (easterEggType === "hxh") {
-      videoSrc = "/hxh.mp4";
-    } else if (easterEggType === "mha") {
-      videoSrc = "/mha.mp4";
-    } else if (easterEggType === "jojo") {
-      videoSrc = "/jojo.mp4";
-    } else if (easterEggType === "kaiju") {
-      videoSrc = "/kaiju.mp4";
-    } else if (easterEggType === "gachiakuta") {
-      videoSrc = "/gachiakuta.mp4";
-    } else if (easterEggType === "mushoku") {
-      videoSrc = "/mushoku.mp4";
-    } else if (easterEggType === "rezero") {
-      videoSrc = "/rezero.mp4";
-    } else if (easterEggType === "blackclover") {
-      videoSrc = "/blackclover.mp4";
-    } else if (easterEggType === "drstone") {
-      videoSrc = "/drstone.mp4";
-    } else if (easterEggType === "fireforce") {
-      videoSrc = "/fireforce.mp4";
-    } else if (easterEggType === "windbreaker") {
-      videoSrc = "/windbreaker.mp4";
-    } else if (easterEggType === "spyxfamily") {
-      videoSrc = "/spyxfamily.mp4";
-    } else if (easterEggType === "slime") {
-      videoSrc = "/slime.mp4";
-    } else if (easterEggType === "suzume") {
-      videoSrc = "/suzume.mp4";
-    } else if (easterEggType === "yourname") {
-      videoSrc = "/yourname.mp4";
-    } else if (easterEggType === "silentvoice") {
-      videoSrc = "/silentvoice.mp4";
-    } else if (easterEggType === "cote") {
-      videoSrc = "/cote.mp4";
-    } else if (easterEggType === "dressupdarling") {
-      videoSrc = "/dressupdarling.mp4";
-    } else if (easterEggType === "codegeass") {
-      videoSrc = "/codegeass.mp4";
-    } else if (easterEggType === "frieren") {
-      videoSrc = "/frieren.mp4";
-    } else if (easterEggType === "monster") {
-      videoSrc = "/monster.mp4";
-    } else if (easterEggType === "apothecary") {
-      videoSrc = "/apothecary.mp4";
-    } else if (easterEggType === "pancreas") {
-      videoSrc = "/pancreas.mp4";
-    } else if (easterEggType === "yourlie") {
-      videoSrc = "/yourlie.mp4";
-    } else if (easterEggType === "baki") {
-      videoSrc = "/baki.mp4";
-    } else if (easterEggType === "berserk") {
-      videoSrc = "/berserk.mp4";
-    } else if (easterEggType === "fairytail") {
-      videoSrc = "/fairytail.mp4";
-    } else if (easterEggType === "boruto") {
-      videoSrc = "/boruto.mp4";
-    } else if (easterEggType === "sentencedhero") {
-      videoSrc = "/sentencedhero.mp4";
-    } else if (easterEggType === "kaguyasama") {
-      videoSrc = "/kaguyasama.mp4";
-    } else if (easterEggType === "graveoffireflies") {
-      videoSrc = "/graveoffireflies.mp4";
-    } else if (easterEggType === "madara") {
-      videoSrc = "/madara.mp4";
-    } else if (easterEggType === "shanks") {
-      videoSrc = "/shanks.mp4";
-    } else if (easterEggType === "toji") {
-      videoSrc = "/toji.mp4";
-    } else if (easterEggType === "tokyoghoul") {
-      videoSrc = "/tokyoghoul.mp4";
-    } else if (easterEggType === "sevendeadlysins") {
-      videoSrc = "/sevendeadlysins.mp4";
-    } else if (easterEggType === "assassinationclassroom") {
-      videoSrc = "/assassinationclassroom.mp4";
-    }
+    const videoSrc = `/${easterEggType}.mp4`;
 
     return (
       <div className="easter-egg-container">
@@ -1049,13 +999,14 @@ function App() {
             </button>
             <button
               type="button"
-              className="close-easter-egg glass"
+              className="close-easter-egg"
               onClick={() => {
                 setEasterEggType(null);
                 setCity(""); // Reset to default
               }}
             >
-              Exit Peak
+              <LogOut size={16} />
+              <span>Exit Peak</span>
             </button>
           </div>
         </div>
@@ -1074,12 +1025,16 @@ function App() {
       <CursorAura />
 
       <div
-        className={`bg-wrapper ${!weather ? 'home-bg' : ''}`}
-        style={weather ? { background: bgGradient } : {}}
+        className="bg-wrapper"
+        style={{ background: bgGradient }}
       />
 
       {weather?.current && (
-        <WeatherEffectsCanvas weatherCode={weather.current.weather_code} />
+        <WeatherEffectsCanvas
+          weatherCode={weather.current.weather_code}
+          temperature={weather.current.temperature_2m}
+          snowfall={weather.current.snowfall}
+        />
       )}
 
       <div className="content-wrapper">
@@ -1095,16 +1050,6 @@ function App() {
           </h1>
           
           <div className="header-actions">
-            <button
-              type="button"
-              className="vault-trigger-btn glass"
-              onClick={() => setIsVaultOpen(true)}
-              title="Open Peak Anime Vault (50+ High Quality Edits)"
-            >
-              <Sparkles size={16} className="sparkle-icon" />
-              <span>Anime Vault</span>
-            </button>
-
             <button
               type="button"
               className="unit-toggle-pill glass"
@@ -1172,7 +1117,29 @@ function App() {
         </AnimatePresence>
       </div>
 
-      {!weather && <FloatingElements />}
+      <FloatingElements
+        weatherCode={weather?.current?.weather_code}
+        isDay={weather?.current?.is_day}
+        temperature={weather?.current?.temperature_2m}
+        snowfall={weather?.current?.snowfall}
+      />
+
+      {/* Floating Mystery Anime Vault Button (Fixed Bottom-Right at all times) */}
+      <motion.button
+        type="button"
+        className="floating-vault-fab glass"
+        onClick={() => setIsVaultOpen(true)}
+        aria-label="Secret Anime Vault"
+        title="✨ Secret Anime Vault"
+        whileHover={{ scale: 1.12, rotate: 8 }}
+        whileTap={{ scale: 0.92 }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.4, type: "spring", stiffness: 350, damping: 22 }}
+      >
+        <Sparkles size={24} className="fab-sparkle-icon" />
+        <span className="fab-pulse-aura"></span>
+      </motion.button>
 
       <AnimeVaultModal
         isOpen={isVaultOpen}
