@@ -5,9 +5,10 @@ export default function AnimatedCounter({ value, decimals = 0, suffix = "", pref
   const numericValue = typeof value === "number" ? value : parseFloat(value) || 0;
 
   const spring = useSpring(numericValue, {
-    mass: 0.8,
-    stiffness: 75,
-    damping: 15,
+    // Critically damped: it settles on the number without overshooting it.
+    mass: 1,
+    stiffness: 110,
+    damping: 21,
   });
 
   const display = useTransform(spring, (current) => {

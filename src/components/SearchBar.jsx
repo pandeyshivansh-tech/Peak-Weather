@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Search, MapPin, History, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { EASE_OUT, EASE_IN } from "../services/motion";
 
 export default function SearchBar({ city, setCity, onSearch, onLocateMe, isLocating }) {
   const [inputValue, setInputValue] = useState(city);
@@ -137,10 +138,9 @@ export default function SearchBar({ city, setCity, onSearch, onLocateMe, isLocat
         {showHistory && history.length > 0 && (
           <motion.div
             className="history"
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.18 }}
+            initial={{ opacity: 0, y: -8, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.3, ease: EASE_OUT } }}
+            exit={{ opacity: 0, y: -6, scale: 0.99, transition: { duration: 0.14, ease: EASE_IN } }}
           >
             <p className="history-title">
               <History size={14} aria-hidden="true" />

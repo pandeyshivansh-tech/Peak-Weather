@@ -402,6 +402,7 @@ export default function RainGlassBackground({ src, rain = 0.6, drops: hasDrops =
   const rootRef = useRef(null);
   const canvasRef = useRef(null);
   const fogRef = useRef(null);
+  const ghostRef = useRef(null);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -524,9 +525,13 @@ export default function RainGlassBackground({ src, rain = 0.6, drops: hasDrops =
       }
     };
 
+    // The scene being replaced is still on the ghost layer; the new one fades
+    // in beneath it, and the ghost then fades away. Nothing cuts.
+    const ghost = ghostRef.current;
+    canvas.style.opacity = "0";
+
     readFog();
     build();
-    canvas.style.opacity = "1";
     start();
 
     const image = new Image();
@@ -535,6 +540,10 @@ export default function RainGlassBackground({ src, rain = 0.6, drops: hasDrops =
     image.onload = () => {
       pane.setScene(image, width, height);
       root.dataset.loaded = "true";
+      canvas.style.opacity = "1";
+      if (ghost) {
+        ghost.style.opacity = "0";
+      }
       if (reduceMotion) {
         render();
       }
@@ -621,6 +630,23 @@ export default function RainGlassBackground({ src, rain = 0.6, drops: hasDrops =
 
     return () => {
       cancelAnimationFrame(raf);
+      // Freeze the last frame onto the ghost layer before the context goes.
+      if (ghost && root.dataset.loaded === "true" && canvas.width > 1) {
+        try {
+          pane.draw();
+          const scale = Math.min(1, 960 / canvas.width);
+          ghost.width = Math.round(canvas.width * scale);
+          ghost.height = Math.round(canvas.height * scale);
+          ghost.getContext("2d").drawImage(canvas, 0, 0, ghost.width, ghost.height);
+          ghost.style.transition = "none";
+          ghost.style.opacity = "1";
+          void ghost.offsetWidth;
+          ghost.style.transition = "";
+        } catch {
+          /* no frozen frame: the new scene simply fades in */
+        }
+      }
+      root.dataset.loaded = "";
       image.onload = null;
       window.clearInterval(colorTimer);
       resizeObserver.disconnect();
@@ -639,6 +665,7 @@ export default function RainGlassBackground({ src, rain = 0.6, drops: hasDrops =
     <div className="rain-glass" ref={rootRef} aria-hidden="true">
       <span className="rain-glass-fog" ref={fogRef} style={{ color: fog }} />
       <canvas className="rain-glass-canvas" ref={canvasRef} />
+      <canvas className="rain-glass-ghost" ref={ghostRef} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { EASE_OUT, EASE_IN } from "../services/motion";
 import {
   X,
   Search,
@@ -236,17 +237,15 @@ export default function AnimeVaultModal({
           className="vault-backdrop"
           onClick={onClose}
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
+          animate={{ opacity: 1, transition: { duration: 0.28, ease: EASE_OUT } }}
+          exit={{ opacity: 0, transition: { duration: 0.18, ease: EASE_IN, delay: 0.04 } }}
         >
           <motion.div
             className="vault-modal" role="dialog" aria-modal="true" aria-labelledby="vault-title"
             onClick={(e) => e.stopPropagation()}
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.96 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.42, ease: EASE_OUT } }}
+            exit={{ opacity: 0, scale: 0.98, y: 6, transition: { duration: 0.18, ease: EASE_IN } }}
           >
             {/* Header */}
             <div className="vault-header">
@@ -368,10 +367,9 @@ export default function AnimeVaultModal({
               {toastMessage && (
                 <motion.div
                   className="vault-toast"
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
+                  initial={{ opacity: 0, y: 12, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.35, ease: EASE_OUT } }}
+                  exit={{ opacity: 0, y: 6, scale: 0.97, transition: { duration: 0.16, ease: EASE_IN } }}
                 >
                   <Sparkles size={14} className="vault-toast-icon" />
                   <span>{toastMessage}</span>

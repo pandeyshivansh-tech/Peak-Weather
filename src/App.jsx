@@ -10,6 +10,7 @@ import SkeletonCard from "./components/SkeletonCard";
 import AnimeVaultModal from "./components/AnimeVaultModal";
 import RainGlassBackground from "./components/RainGlassBackground";
 import { getMood, paintScene } from "./services/scene";
+import { EASE_OUT, EASE_IN, view } from "./services/motion";
 import "./styles/vault.css";
 import "./styles/app.css";
 
@@ -1013,7 +1014,25 @@ function App() {
     () => getMood(weather, import.meta.env.DEV ? new URLSearchParams(location.search).get("effect") : null),
     [weather]
   );
-  const sceneSrc = useMemo(() => paintScene(mood), [mood]);
+  // The painting is a big canvas job. It waits for a frame after the view
+  // starts changing so the click never stalls, and the old scene stays up
+  // (and fades into the new one) until it is ready.
+  const [sceneSrc, setSceneSrc] = useState(() => paintScene(mood));
+  const firstScene = useRef(true);
+  useEffect(() => {
+    if (firstScene.current) {
+      firstScene.current = false;
+      return;
+    }
+    let inner = 0;
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => setSceneSrc(paintScene(mood)));
+    });
+    return () => {
+      cancelAnimationFrame(outer);
+      cancelAnimationFrame(inner);
+    };
+  }, [mood]);
 
   // A new place starts at the top, with its temperature in view.
   useEffect(() => {
@@ -1142,7 +1161,7 @@ function App() {
       <main className="stage">
         <AnimatePresence mode="wait">
           {loading ? (
-            <motion.div key="loading" exit={{ opacity: 0 }}>
+            <motion.div key="loading" exit={{ opacity: 0, transition: { duration: 0.16, ease: EASE_IN } }}>
               <SkeletonCard />
             </motion.div>
           ) : error ? (
@@ -1151,8 +1170,8 @@ function App() {
               className="notice"
               role="alert"
               initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
+              animate={{ opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE_OUT } }}
+              exit={view.exit}
             >
               <h1 className="notice-title">{error}</h1>
               <p>Search for a city by name, check the spelling, or try a nearby larger town. If you are offline, reconnect first.</p>
@@ -1161,11 +1180,11 @@ function App() {
               </button>
             </motion.section>
           ) : weather ? (
-            <motion.div key={`weather-${weather.name}`} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }}>
+            <motion.div key={`weather-${weather.name}`} exit={view.exit}>
               <WeatherCard weather={weather} unit={unit} convertTemp={convertTemp} />
             </motion.div>
           ) : (
-            <motion.div key="home" exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }}>
+            <motion.div key="home" exit={view.exit}>
               <PopularCities
                 unit={unit}
                 convertTemp={convertTemp}
@@ -1194,7 +1213,7 @@ function App() {
               initial={{ opacity: 0, x: 60, scale: 0.4 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 60, scale: 0.2 }}
-              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.6, ease: EASE_OUT }}
             >
               <div className="milestone-toast-icon-wrap">
                 <Key size={16} className="milestone-toast-key" />
@@ -1213,11 +1232,11 @@ function App() {
           onClick={() => setIsVaultOpen(true)}
           aria-label="Secret Anime Vault"
           title="Secret anime vault"
-          whileHover={{ scale: 1.12, rotate: 8 }}
-          whileTap={{ scale: 0.92 }}
+          whileHover={{ scale: 1.12, rotate: 8, transition: { type: "spring", stiffness: 320, damping: 20 } }}
+          whileTap={{ scale: 0.92, transition: { type: "spring", stiffness: 500, damping: 30 } }}
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.4, type: "spring", stiffness: 350, damping: 22 }}
+          transition={{ delay: 0.5, type: "spring", stiffness: 260, damping: 22 }}
         >
           <Sparkles size={24} className="fab-sparkle-icon" />
           {discoveredAnime.length > 0 && (

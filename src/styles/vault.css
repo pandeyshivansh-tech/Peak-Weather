@@ -27,7 +27,7 @@
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.32);
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background 0.28s var(--ease), color 0.28s var(--ease);
 }
 
 .floating-vault-fab:hover {
@@ -65,7 +65,7 @@
   cursor: pointer;
   white-space: nowrap;
   transform-origin: right center;
-  transition: background 0.2s ease;
+  transition: background 0.28s var(--ease);
 }
 
 .vault-milestone-toast:hover {
@@ -188,7 +188,7 @@
   border-radius: 999px;
   font-size: 16px;
   font-weight: 500;
-  transition: background 0.2s ease, transform 0.15s var(--ease);
+  transition: background 0.28s var(--ease), transform 0.2s var(--ease);
 }
 
 .vault-action-btn:active {
@@ -219,7 +219,7 @@
   height: 44px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
-  transition: background 0.2s ease, transform 0.15s var(--ease);
+  transition: background 0.28s var(--ease), transform 0.2s var(--ease);
 }
 
 .vault-close-btn:hover {
@@ -285,7 +285,7 @@
   padding: 0 8px 0 18px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.1);
-  transition: background 0.2s ease, box-shadow 0.2s ease;
+  transition: background 0.28s var(--ease), box-shadow 0.28s var(--ease);
 }
 
 .vault-search-wrapper:focus-within {
@@ -347,7 +347,7 @@
   background: rgba(255, 255, 255, 0.1);
   color: var(--ink-2);
   font-size: 16px;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background 0.28s var(--ease), color 0.28s var(--ease);
 }
 
 .vault-cat-pill:hover {
@@ -415,7 +415,7 @@
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.1);
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s var(--ease);
+  transition: background 0.28s var(--ease), transform 0.2s var(--ease);
 }
 
 .vault-card:hover {
@@ -587,7 +587,7 @@
   background: rgba(255, 255, 255, 0.08);
   color: #ffb4b4;
   font-size: 16px;
-  transition: background 0.2s ease;
+  transition: background 0.28s var(--ease);
 }
 
 .vault-danger-reset-btn:hover {
@@ -699,7 +699,7 @@
   border-radius: 999px;
   font-size: 16px;
   font-weight: 500;
-  transition: background 0.2s ease, transform 0.15s var(--ease);
+  transition: background 0.28s var(--ease), transform 0.2s var(--ease);
 }
 
 .easter-egg-control-btn {

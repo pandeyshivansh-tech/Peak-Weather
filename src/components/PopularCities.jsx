@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { LocateFixed, Loader2 } from "lucide-react";
 import { describe } from "../services/weather";
+import { rise, stagger as makeStagger } from "../services/motion";
 
 const PLACES = [
   { name: "Tokyo", lat: 35.6895, lon: 139.6917 },
@@ -11,11 +12,7 @@ const PLACES = [
   { name: "Paris", lat: 48.8566, lon: 2.3522 },
 ];
 
-const rise = {
-  hidden: { opacity: 0, y: 24 },
-  shown: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
-};
-const stagger = { hidden: {}, shown: { transition: { staggerChildren: 0.07 } } };
+const stagger = makeStagger(0.07, 0.05);
 
 // The city's own wall clock, from the forecast's UTC offset.
 function localTime(offsetSeconds) {

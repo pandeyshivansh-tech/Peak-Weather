@@ -3,6 +3,7 @@ import { Droplets, Eye, Gauge, MapPin, Sun, Sunrise, Thermometer, Wind } from "l
 import HourlyForecast from "./HourlyForecast";
 import DailyForecast from "./DailyForecast";
 import AnimatedCounter from "./AnimatedCounter";
+import { rise, stagger as makeStagger } from "../services/motion";
 import {
   clockLabel,
   compass,
@@ -17,11 +18,7 @@ import {
   windNote,
 } from "../services/weather";
 
-const rise = {
-  hidden: { opacity: 0, y: 24 },
-  shown: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
-};
-const stagger = { hidden: {}, shown: { transition: { staggerChildren: 0.08 } } };
+const stagger = makeStagger(0.08);
 
 function Tile({ icon, label, value, note, wide, children }) {
   const Icon = icon;
