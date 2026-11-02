@@ -43,7 +43,7 @@ export const ANIME_CHARACTERS = [
   { id: "berserk", name: "Berserk", anime: "Guts", category: "dark" },
   { id: "baki", name: "Baki Hanma", anime: "Baki & Yujiro", category: "hype" },
   { id: "tokyoghoul", name: "Tokyo Ghoul", anime: "Ken Kaneki", category: "dark" },
-  { id: "dbz", name: "Dragon Ball Z", anime: "Goku & Vegeta", category: "hype" },
+  { id: "dbs", name: "Dragon Ball Super", anime: "Goku & Vegeta", category: "hype" },
   { id: "opm", name: "One Punch Man", anime: "Saitama", category: "hype" },
   { id: "dandadan", name: "Dandadan", anime: "Momo & Okarun", category: "action" },
   { id: "fmab", name: "Fullmetal Alchemist", anime: "Edward Elric", category: "action" },

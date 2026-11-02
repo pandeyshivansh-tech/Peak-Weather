@@ -33,7 +33,8 @@ const ANIME_TITLES = {
   berserk: "Berserk",
   baki: "Baki Hanma",
   tokyoghoul: "Tokyo Ghoul",
-  dbz: "Dragon Ball Z",
+  dbs: "Dragon Ball Super",
+  dbz: "Dragon Ball Super",
   opm: "One Punch Man",
   dandadan: "Dandadan",
   fmab: "Fullmetal Alchemist",
@@ -265,7 +266,7 @@ function App() {
       },
       { timeout: 10000 }
     );
-  }; // 'onepiece' | 'aot' | 'naruto' | 'boruto' | 'sololeveling' | 'deathnote' | 'jjk' | 'chainsawman' | 'gojo' | 'bluelock' | 'vinlandsaga' | 'bleach' | 'demonslayer' | 'fmab' | 'opm' | 'dandadan' | 'dbz' | 'haikyu' | 'gintama' | 'highschooldxd' | 'hxh' | 'mha' | 'jojo' | 'kaiju' | 'gachiakuta' | 'mushoku' | 'rezero' | 'blackclover' | 'drstone' | 'fireforce' | 'windbreaker' | 'spyxfamily' | 'slime' | 'suzume' | 'yourname' | 'silentvoice' | 'cote' | 'dressupdarling' | 'codegeass' | 'frieren' | 'monster' | 'apothecary' | 'pancreas' | 'yourlieinapril' | 'baki' | 'berserk' | 'fairytail' | 'sentencedhero' | 'kaguyasama' | 'graveoffireflies' | 'madara' | 'shanks' | 'toji' | 'tokyoghoul' | 'sevendeadlysins' | 'assassinationclassroom' | null
+  }; // 'onepiece' | 'aot' | 'naruto' | 'boruto' | 'sololeveling' | 'deathnote' | 'jjk' | 'chainsawman' | 'gojo' | 'bluelock' | 'vinlandsaga' | 'bleach' | 'demonslayer' | 'fmab' | 'opm' | 'dandadan' | 'dbs' | 'haikyu' | 'gintama' | 'highschooldxd' | 'hxh' | 'mha' | 'jojo' | 'kaiju' | 'gachiakuta' | 'mushoku' | 'rezero' | 'blackclover' | 'drstone' | 'fireforce' | 'windbreaker' | 'spyxfamily' | 'slime' | 'suzume' | 'yourname' | 'silentvoice' | 'cote' | 'dressupdarling' | 'codegeass' | 'frieren' | 'monster' | 'apothecary' | 'pancreas' | 'yourlieinapril' | 'baki' | 'berserk' | 'fairytail' | 'sentencedhero' | 'kaguyasama' | 'graveoffireflies' | 'madara' | 'shanks' | 'toji' | 'tokyoghoul' | 'sevendeadlysins' | 'assassinationclassroom' | null
 
   const handleSearch = async (searchCity) => {
     if (!searchCity) return;
@@ -417,10 +418,23 @@ function App() {
     }
 
     if (
+      normalizedSearch.includes("rezero") ||
+      normalizedSearch.includes("subaru") ||
+      normalizedSearch.includes("emilia") ||
+      new RegExp("\\brem\\b", "i").test(searchCity) ||
+      new RegExp("\\bram\\b", "i").test(searchCity) ||
+      normalizedSearch.includes("echidna") ||
+      normalizedSearch.includes("beatrice")
+    ) {
+      setEasterEggType("rezero");
+      return;
+    }
+
+    if (
       normalizedSearch.includes("chainsawman") ||
       normalizedSearch.includes("csm") ||
       normalizedSearch.includes("denji") ||
-      normalizedSearch.includes("reze") ||
+      (normalizedSearch.includes("reze") && !normalizedSearch.includes("rezero")) ||
       normalizedSearch.includes("bombdevil") ||
       normalizedSearch.includes("pochita") ||
       normalizedSearch.includes("akihayakawa")
@@ -515,15 +529,23 @@ function App() {
     }
 
     if (
-      normalizedSearch.includes("dragonball") ||
-      new RegExp("\\bdragon\\b", "i").test(searchCity) ||
-      normalizedSearch.includes("dbz") ||
-      normalizedSearch.includes("goku") ||
-      normalizedSearch.includes("vegeta") ||
-      normalizedSearch.includes("gohan") ||
-      normalizedSearch.includes("saiyan")
+      !normalizedSearch.includes("dbz") &&
+      !normalizedSearch.includes("dragonballz") &&
+      (
+        normalizedSearch.includes("dbs") ||
+        normalizedSearch.includes("dragonballsuper") ||
+        normalizedSearch.includes("dragonball") ||
+        (new RegExp("\\bdragon\\b", "i").test(searchCity) && !normalizedSearch.includes("dragonslayer")) ||
+        normalizedSearch.includes("goku") ||
+        normalizedSearch.includes("vegeta") ||
+        normalizedSearch.includes("gohan") ||
+        normalizedSearch.includes("saiyan") ||
+        normalizedSearch.includes("beerus") ||
+        normalizedSearch.includes("whis") ||
+        normalizedSearch.includes("ultrainstinct")
+      )
     ) {
-      setEasterEggType("dbz");
+      setEasterEggType("dbs");
       return;
     }
 
@@ -634,19 +656,6 @@ function App() {
       normalizedSearch.includes("jobless")
     ) {
       setEasterEggType("mushoku");
-      return;
-    }
-
-    if (
-      normalizedSearch.includes("rezero") ||
-      normalizedSearch.includes("subaru") ||
-      normalizedSearch.includes("emilia") ||
-      new RegExp("\\brem\\b", "i").test(searchCity) ||
-      new RegExp("\\bram\\b", "i").test(searchCity) ||
-      normalizedSearch.includes("echidna") ||
-      normalizedSearch.includes("beatrice")
-    ) {
-      setEasterEggType("rezero");
       return;
     }
 
