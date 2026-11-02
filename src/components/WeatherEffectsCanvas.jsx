@@ -1,169 +1,164 @@
 import { useEffect, useRef } from "react";
 
-export default function WeatherEffectsCanvas({ weatherCode, temperature = null, snowfall = 0 }) {
-  const canvasRef = useRef(null);
+// What drifts through the air in front of the view. Rain is the glass shader's
+// job; this draws the rest: snow, fog banks, blown sand, cherry blossom and
+// the flash of lightning. `effect` is one of snow | fog | sand | petals | none.
 
-  // Weather type detection
-  const isThunder = weatherCode >= 95 && weatherCode <= 99;
-  const isRain = ((weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 82) || isThunder) && (!temperature || temperature > 0);
-  const isExplicitSnow = (weatherCode >= 71 && weatherCode <= 77) || (weatherCode >= 85 && weatherCode <= 86) || (snowfall && snowfall > 0);
-  // Freezing condition: Below freezing temperatures (<= 0°C with clouds/precip or <= -2°C polar freezing like Antarctica)
-  const isFreezingSnow = temperature !== undefined && temperature !== null && (temperature <= -2 || (temperature <= 0 && weatherCode >= 1));
-  const isSnow = isExplicitSnow || isFreezingSnow;
-  const isFog = weatherCode >= 45 && weatherCode <= 48;
+const PETAL_TONES = ["#ffc2d4", "#ffd6e3", "#ffe7ef", "#f7a9c2"];
 
-  const shouldRender = isRain || isSnow || isFog || isThunder;
+function make(effect, w, h) {
+  const scale = Math.min(1, w / 1200) * 0.5 + 0.5;
+  const count = Math.round({ snow: 90, fog: 22, sand: 150, petals: 46 }[effect] * scale);
+  return Array.from({ length: count }, () => {
+    const base = { x: Math.random() * w, y: Math.random() * h, phase: Math.random() * Math.PI * 2 };
+    if (effect === "snow") {
+      const r = Math.random() * 3 + 1;
+      return { ...base, r, vy: 0.5 + r * 0.45, a: 0.35 + Math.random() * 0.6 };
+    }
+    if (effect === "fog") {
+      return { ...base, r: 120 + Math.random() * 180, vx: (Math.random() - 0.3) * 0.25, a: 0.06 + Math.random() * 0.09 };
+    }
+    if (effect === "sand") {
+      return { ...base, len: 24 + Math.random() * 70, vx: 11 + Math.random() * 16, vy: 0.4 + Math.random() * 1.2, a: 0.18 + Math.random() * 0.4, lw: 1 + Math.random() * 1.6 };
+    }
+    return {
+      ...base,
+      r: 7 + Math.random() * 7,
+      vy: 0.7 + Math.random() * 1.1,
+      vx: 0.5 + Math.random() * 0.9,
+      spin: (Math.random() - 0.5) * 0.05,
+      tone: PETAL_TONES[Math.floor(Math.random() * PETAL_TONES.length)],
+      a: 0.7 + Math.random() * 0.3,
+    };
+  });
+}
+
+export default function WeatherEffectsCanvas({ effect = "none", thunder = false }) {
+  const ref = useRef(null);
+  const active = effect !== "none" || thunder;
 
   useEffect(() => {
-    if (!shouldRender) return;
-
-    // Respect reduced motion preference
+    if (!active) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const canvas = canvasRef.current;
+    const canvas = ref.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext("2d");
-    let animationFrameId;
+    let w = (canvas.width = window.innerWidth);
+    let h = (canvas.height = window.innerHeight);
+    let raf = 0;
+    let wind = 0; // the pointer pushes the air a little
+    let lastX = w / 2;
+    let flash = 0;
+    let t = 0;
+    let parts = make(effect, w, h);
 
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
-
-    let mouseX = width / 2;
-    let mouseY = height / 2;
-    let mouseSpeedX = 0;
-    let mouseSpeedY = 0;
-    let lastMouseX = mouseX;
-    let lastMouseY = mouseY;
-
-    const handleResize = () => {
-      if (!canvas) return;
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+    const onResize = () => {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+      parts = make(effect, w, h);
     };
-
-    const handleMouseMove = (e) => {
-      mouseSpeedX = (e.clientX - lastMouseX) * 0.15;
-      mouseSpeedY = (e.clientY - lastMouseY) * 0.15;
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-      lastMouseX = mouseX;
-      lastMouseY = mouseY;
+    const onMove = (e) => {
+      wind = (e.clientX - lastX) * 0.12;
+      lastX = e.clientX;
     };
+    window.addEventListener("resize", onResize);
+    window.addEventListener("mousemove", onMove, { passive: true });
 
-    window.addEventListener("resize", handleResize);
-    window.addEventListener("mousemove", handleMouseMove);
+    const frame = () => {
+      t += 1;
+      ctx.clearRect(0, 0, w, h);
 
-    const particles = [];
-    const particleCount = isThunder ? 90 : isRain ? 75 : isSnow ? 65 : 25;
-
-    for (let i = 0; i < particleCount; i++) {
-      particles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        radius: isSnow ? Math.random() * 3 + 1.2 : Math.random() * 70 + 40,
-        length: isRain ? Math.random() * 25 + 12 : 0,
-        speedY: isRain ? Math.random() * 14 + 9 : isSnow ? Math.random() * 1.8 + 0.6 : Math.random() * 0.2 + 0.05,
-        speedX: isRain ? Math.random() * 1.2 - 0.6 : isSnow ? Math.random() * 1.2 - 0.6 : Math.random() * 0.3 - 0.15,
-        opacity: isRain ? Math.random() * 0.45 + 0.2 : isSnow ? Math.random() * 0.75 + 0.3 : Math.random() * 0.15 + 0.05,
-        swayPhase: Math.random() * Math.PI * 2,
-      });
-    }
-
-    let lightningFlash = 0;
-
-    const render = () => {
-      ctx.clearRect(0, 0, width, height);
-
-      // Random lightning flash during thunderstorms
-      if (isThunder) {
-        if (Math.random() < 0.008 && lightningFlash <= 0) {
-          lightningFlash = Math.random() * 0.35 + 0.15;
-        }
-        if (lightningFlash > 0) {
-          ctx.fillStyle = `rgba(224, 231, 255, ${lightningFlash})`;
-          ctx.fillRect(0, 0, width, height);
-          lightningFlash -= 0.03;
+      if (thunder) {
+        if (Math.random() < 0.007 && flash <= 0) flash = 0.2 + Math.random() * 0.3;
+        if (flash > 0) {
+          ctx.fillStyle = `rgba(224, 231, 255, ${flash})`;
+          ctx.fillRect(0, 0, w, h);
+          flash -= 0.03;
         }
       }
 
-      particles.forEach((p) => {
-        p.swayPhase += 0.02;
+      // Sand arrives in gusts: a haze that swells and thins.
+      if (effect === "sand") {
+        const gust = 0.5 + 0.5 * Math.sin(t / 140);
+        ctx.fillStyle = `rgba(206, 150, 82, ${0.1 + gust * 0.14})`;
+        ctx.fillRect(0, 0, w, h);
+        ctx.lineCap = "round";
+      }
 
-        if (isSnow) {
+      for (const p of parts) {
+        p.phase += 0.02;
+        if (effect === "snow") {
           ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+          ctx.arc(p.x, p.y, p.r, 0, 7);
+          ctx.fillStyle = `rgba(255,255,255,${p.a})`;
           ctx.fill();
-
-          p.y += p.speedY;
-          p.x += Math.sin(p.swayPhase) * 1.2 + mouseSpeedX * 0.05;
-
-          if (p.y > height) {
-            p.y = -p.radius;
-            p.x = Math.random() * width;
+          p.y += p.vy;
+          p.x += Math.sin(p.phase) * 0.9 + wind * 0.05;
+          if (p.y > h + 4) {
+            p.y = -4;
+            p.x = Math.random() * w;
           }
-        } else if (isRain) {
+        } else if (effect === "fog") {
+          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+          g.addColorStop(0, `rgba(241,245,249,${p.a})`);
+          g.addColorStop(1, "rgba(241,245,249,0)");
+          ctx.fillStyle = g;
+          ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+          p.x += p.vx;
+          if (p.x > w + p.r) p.x = -p.r;
+          if (p.x < -p.r) p.x = w + p.r;
+        } else if (effect === "sand") {
+          const gust = 0.6 + 0.8 * (0.5 + 0.5 * Math.sin(t / 140 + p.phase * 0.2));
           ctx.beginPath();
-          const slant = p.speedX + mouseSpeedX * 0.2;
           ctx.moveTo(p.x, p.y);
-          ctx.lineTo(p.x + slant * 2, p.y + p.length);
-          ctx.strokeStyle = isThunder ? `rgba(199, 210, 254, ${p.opacity})` : `rgba(186, 230, 253, ${p.opacity})`;
-          ctx.lineWidth = isThunder ? 2 : 1.5;
+          ctx.lineTo(p.x - p.len * gust, p.y - p.len * 0.05);
+          ctx.strokeStyle = `rgba(232, 190, 128, ${p.a})`;
+          ctx.lineWidth = p.lw;
           ctx.stroke();
-
-          p.y += p.speedY;
-          p.x += p.speedX + mouseSpeedX * 0.05;
-
-          if (p.y > height) {
-            p.y = -p.length;
-            p.x = Math.random() * width;
+          p.x += (p.vx + wind * 0.3) * gust;
+          p.y += p.vy + Math.sin(p.phase) * 0.4;
+          if (p.x > w + p.len) {
+            p.x = -p.len;
+            p.y = Math.random() * h;
           }
-        } else if (isFog) {
+        } else if (effect === "petals") {
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.phase * 1.3);
+          ctx.scale(1, 0.62 + 0.38 * Math.sin(p.phase * 1.7));
           ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-          const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
-          grad.addColorStop(0, `rgba(241, 245, 249, ${p.opacity})`);
-          grad.addColorStop(1, "rgba(241, 245, 249, 0)");
-          ctx.fillStyle = grad;
+          ctx.ellipse(0, 0, p.r, p.r * 0.55, 0, 0, 7);
+          ctx.fillStyle = p.tone;
+          ctx.globalAlpha = p.a;
           ctx.fill();
-
-          p.x += p.speedX;
-          p.y += p.speedY;
-
-          if (p.x > width + p.radius) p.x = -p.radius;
-          if (p.x < -p.radius) p.x = width + p.radius;
+          ctx.restore();
+          p.y += p.vy;
+          p.x += p.vx + Math.sin(p.phase * 0.7) * 0.7 + wind * 0.06;
+          if (p.y > h + 12 || p.x > w + 12) {
+            p.x = Math.random() * w * 0.9 - w * 0.1;
+            p.y = -12;
+          }
         }
-      });
-
-      // Dampen mouse inertia
-      mouseSpeedX *= 0.92;
-      mouseSpeedY *= 0.92;
-
-      animationFrameId = requestAnimationFrame(render);
+      }
+      ctx.globalAlpha = 1;
+      wind *= 0.92;
+      raf = requestAnimationFrame(frame);
     };
-
-    render();
+    raf = requestAnimationFrame(frame);
 
     return () => {
-      window.removeEventListener("resize", handleResize);
-      window.removeEventListener("mousemove", handleMouseMove);
-      cancelAnimationFrame(animationFrameId);
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("mousemove", onMove);
     };
-  }, [weatherCode, temperature, snowfall, shouldRender]);
+  }, [effect, thunder, active]);
 
-  if (!shouldRender) return null;
-
+  if (!active) return null;
   return (
     <canvas
-      ref={canvasRef}
-      className="weather-canvas"
-      style={{
-        position: "fixed",
-        inset: 0,
-        pointerEvents: "none",
-        zIndex: 0,
-      }}
+      ref={ref}
+      aria-hidden="true"
+      style={{ position: "fixed", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0 }}
     />
   );
 }

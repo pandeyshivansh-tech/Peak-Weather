@@ -1,113 +1,108 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Cloud, Sun, CloudRain, Wind, CloudFog, CloudLightning, CloudDrizzle, Snowflake } from "lucide-react";
+import { LocateFixed, Loader2 } from "lucide-react";
+import { describe } from "../services/weather";
 
-const POPULAR_CONFIG = [
-  { name: "Tokyo", lat: 35.6895, lon: 139.6917, defaultTemp: 22, defaultCondition: "Sunny", defaultIcon: Sun },
-  { name: "New York", lat: 40.7128, lon: -74.006, defaultTemp: 16, defaultCondition: "Cloudy", defaultIcon: Cloud },
-  { name: "London", lat: 51.5074, lon: -0.1278, defaultTemp: 12, defaultCondition: "Rainy", defaultIcon: CloudRain },
-  { name: "Paris", lat: 48.8566, lon: 2.3522, defaultTemp: 18, defaultCondition: "Breezy", defaultIcon: Wind },
+const PLACES = [
+  { name: "Tokyo", lat: 35.6895, lon: 139.6917 },
+  { name: "Mumbai", lat: 19.076, lon: 72.8777 },
+  { name: "London", lat: 51.5074, lon: -0.1278 },
+  { name: "New York", lat: 40.7128, lon: -74.006 },
+  { name: "Paris", lat: 48.8566, lon: 2.3522 },
 ];
 
-const getWeatherDetails = (code) => {
-  if (code === 0) return { condition: "Clear", icon: Sun };
-  if (code >= 1 && code <= 3) return { condition: "Partly Cloudy", icon: Cloud };
-  if (code >= 45 && code <= 48) return { condition: "Foggy", icon: CloudFog };
-  if (code >= 51 && code <= 55) return { condition: "Drizzle", icon: CloudDrizzle };
-  if (code >= 61 && code <= 67) return { condition: "Rainy", icon: CloudRain };
-  if (code >= 71 && code <= 77) return { condition: "Snowy", icon: Snowflake };
-  if (code >= 95 && code <= 99) return { condition: "Stormy", icon: CloudLightning };
-  return { condition: "Clear", icon: Sun };
+const rise = {
+  hidden: { opacity: 0, y: 24 },
+  shown: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
 };
+const stagger = { hidden: {}, shown: { transition: { staggerChildren: 0.07 } } };
 
-export default function PopularCities({ onCityClick, unit = "C", convertTemp = (t) => t }) {
-  const [cityData, setCityData] = useState(
-    POPULAR_CONFIG.map((c) => ({
-      name: c.name,
-      temp: c.defaultTemp,
-      condition: c.defaultCondition,
-      icon: c.defaultIcon,
-    }))
-  );
+// The city's own wall clock, from the forecast's UTC offset.
+function localTime(offsetSeconds) {
+  const d = new Date(Date.now() + offsetSeconds * 1000);
+  return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", timeZone: "UTC" });
+}
+
+export default function PopularCities({ onCityClick, onLocateMe, isLocating, unit, convertTemp }) {
+  const [places, setPlaces] = useState(PLACES.map((p) => ({ ...p, loaded: false })));
 
   useEffect(() => {
-    // Fetch live weather data for popular cities in background
-    let isMounted = true;
-    const fetchCityWeather = async () => {
-      try {
-        const promises = POPULAR_CONFIG.map(async (c) => {
-          try {
-            const res = await fetch(
-              `https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,weather_code`
-            );
-            if (!res.ok) throw new Error("Failed");
-            const data = await res.json();
-            const { condition, icon } = getWeatherDetails(data.current?.weather_code ?? 0);
-            return {
-              name: c.name,
-              temp: data.current?.temperature_2m ?? c.defaultTemp,
-              condition,
-              icon,
-            };
-          } catch {
-            return {
-              name: c.name,
-              temp: c.defaultTemp,
-              condition: c.defaultCondition,
-              icon: c.defaultIcon,
-            };
-          }
-        });
-
-        const results = await Promise.all(promises);
-        if (isMounted) setCityData(results);
-      } catch (err) {
-        console.warn("Could not fetch popular cities weather:", err);
-      }
-    };
-
-    fetchCityWeather();
+    let alive = true;
+    Promise.all(
+      PLACES.map(async (p) => {
+        try {
+          const res = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&current=temperature_2m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto`
+          );
+          if (!res.ok) throw new Error(res.statusText);
+          const data = await res.json();
+          return {
+            ...p,
+            loaded: true,
+            temp: data.current.temperature_2m,
+            code: data.current.weather_code,
+            isDay: data.current.is_day !== 0,
+            hi: data.daily?.temperature_2m_max?.[0],
+            lo: data.daily?.temperature_2m_min?.[0],
+            offset: data.utc_offset_seconds ?? 0,
+          };
+        } catch {
+          return { ...p, loaded: false, failed: true };
+        }
+      })
+    ).then((rows) => alive && setPlaces(rows));
     return () => {
-      isMounted = false;
+      alive = false;
     };
   }, []);
 
   return (
-    <motion.div 
-      className="popular-cities-container"
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.4 }}
-    >
-      <h3 className="popular-cities-title">Popular Destinations</h3>
-      <div className="cities-grid">
-        {cityData.map((city, index) => {
-          const Icon = city.icon;
-          const displayTemp = convertTemp(city.temp);
+    <motion.div className="home" initial="hidden" animate="shown" variants={stagger}>
+      <section className="home-hero" aria-labelledby="home-title">
+        <motion.h1 id="home-title" className="home-title" variants={rise}>
+          Check the weather anywhere
+        </motion.h1>
+        <motion.p className="home-lede" variants={rise}>
+          Search a city for current conditions, the next 24 hours and the week ahead.
+          Or start with where you are.
+        </motion.p>
+        <motion.div className="home-actions" variants={rise}>
+          <button type="button" className="button-primary" onClick={onLocateMe} disabled={isLocating}>
+            {isLocating ? <Loader2 size={18} className="spin" aria-hidden="true" /> : <LocateFixed size={18} aria-hidden="true" />}
+            {isLocating ? "Finding you" : "Use my location"}
+          </button>
+          <p className="home-hint">Drag across the window to wipe the fog off the glass.</p>
+        </motion.div>
+      </section>
 
-          return (
-            <motion.div
-              key={city.name}
-              className="city-card glass"
-              whileHover={{ scale: 1.05, y: -5, transition: { duration: 0.2, delay: 0 } }}
-              whileTap={{ scale: 0.95, transition: { duration: 0.1, delay: 0 } }}
-              onClick={() => onCityClick(city.name)}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
-            >
-              <div className="city-card-header">
-                <h4>{city.name}</h4>
-                <Icon size={24} className="city-icon" />
-              </div>
-              <div className="city-card-body">
-                <span className="city-temp">{displayTemp}°{unit}</span>
-                <span className="city-cond">{city.condition}</span>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
+      <motion.section className="panel places" aria-labelledby="places-title" variants={rise}>
+        <h2 id="places-title" className="panel-title">Right now in</h2>
+        <ul className="places-list">
+          {places.map((p) => {
+            const sky = p.loaded ? describe(p.code, p.isDay) : null;
+            return (
+              <li key={p.name}>
+                <button type="button" className="place-row" onClick={() => onCityClick(p.name)}>
+                  <span className="place-row-name">{p.name}</span>
+                  <span className="place-row-meta">
+                    {p.loaded ? `${localTime(p.offset)} · ${sky.label}` : p.failed ? "Tap to load" : "Loading"}
+                  </span>
+                  <span className="place-row-sky">
+                    {sky && <sky.Icon size={26} className={sky.sunny ? "icon-sun" : undefined} aria-hidden="true" />}
+                  </span>
+                  <span className="place-row-temp">
+                    {p.loaded ? `${convertTemp(p.temp)}°` : "--"}
+                    <span className="visually-hidden">{unit === "F" ? " Fahrenheit" : " Celsius"}</span>
+                  </span>
+                  <span className="place-row-range">
+                    {p.loaded && p.hi !== undefined ? `${convertTemp(p.hi)}° / ${convertTemp(p.lo)}°` : ""}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </motion.section>
     </motion.div>
   );
 }

@@ -1,16 +1,17 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Mountain, Sparkles, Volume2, VolumeX, LogOut, Key } from "lucide-react";
+import { ArrowUpRight, Mountain, Sparkles, Volume2, VolumeX, LogOut, Key } from "lucide-react";
 import { getWeather, getCoordinates, getCityFromCoords } from "./services/api";
 import SearchBar from "./components/SearchBar";
 import WeatherCard from "./components/WeatherCard";
 import PopularCities from "./components/PopularCities";
-import FloatingElements from "./components/FloatingElements";
 import WeatherEffectsCanvas from "./components/WeatherEffectsCanvas";
 import SkeletonCard from "./components/SkeletonCard";
-import CursorAura from "./components/CursorAura";
 import AnimeVaultModal from "./components/AnimeVaultModal";
-import "./App.css";
+import RainGlassBackground from "./components/RainGlassBackground";
+import { getMood, paintScene } from "./services/scene";
+import "./styles/vault.css";
+import "./styles/app.css";
 
 const ANIME_TITLES = {
   toji: "Toji Fushiguro",
@@ -73,78 +74,6 @@ const ANIME_TITLES = {
   weathering: "Weathering With You",
   mobpsycho: "Mob Psycho 100",
   pakistan: "Nuclear Blast",
-};
-
-const getTimeBasedGradient = () => {
-  const hour = new Date().getHours();
-  // Early Morning / Sunrise (5:00 AM - 7:59 AM)
-  if (hour >= 5 && hour < 8) {
-    return "linear-gradient(145deg, #1e3a5f 0%, #2d4a77 40%, #5b3a6e 80%, #0f172a 100%)";
-  }
-  // Morning / Daytime (8:00 AM - 16:29 PM) - Sophisticated deep sapphire/azure
-  if (hour >= 8 && hour < 17) {
-    return "linear-gradient(145deg, #1e3a8a 0%, #1e40af 45%, #0f172a 100%)";
-  }
-  // Golden Hour / Sunset (17:00 PM - 19:29 PM) - Deep rich plum amber
-  if (hour >= 17 && hour < 20) {
-    return "linear-gradient(145deg, #701a75 0%, #4c0519 45%, #0f172a 100%)";
-  }
-  // Twilight / Evening (20:00 PM - 21:59 PM) - Velvet night dusk
-  if (hour >= 20 && hour < 22) {
-    return "linear-gradient(145deg, #1e1b4b 0%, #1e293b 50%, #0b0f19 100%)";
-  }
-  // Midnight / Night (22:00 PM - 4:59 AM) - Cosmic dark slate
-  return "linear-gradient(145deg, #0b132b 0%, #1c2541 50%, #090d16 100%)";
-};
-
-const getBackgroundGradient = (code, isDay = 1, temperature = null) => {
-  const isFreezing = temperature !== null && temperature !== undefined && temperature <= 0;
-
-  // Polar Arctic Freeze (e.g. Antarctica <= -10°C)
-  if (isFreezing && temperature <= -10) {
-    return isDay !== 0
-      ? "linear-gradient(145deg, #1e3a5f 0%, #2b4c7e 45%, #60a5fa 85%, #dbeafe 100%)"
-      : "linear-gradient(145deg, #070d1e 0%, #0f172a 45%, #1e293b 100%)";
-  }
-
-  // If night time (isDay === 0)
-  if (isDay === 0) {
-    if (isFreezing || (code >= 71 && code <= 77) || (code >= 85 && code <= 86)) {
-      return "linear-gradient(145deg, #0b132b 0%, #172554 45%, #1e3a5f 100%)";
-    }
-    // Clear Night
-    if (code === 0) return "linear-gradient(145deg, #0b132b 0%, #1c2541 50%, #090d16 100%)";
-    // Partly Cloudy / Cloudy Night
-    if (code >= 1 && code <= 3) return "linear-gradient(145deg, #0f172a 0%, #1e293b 50%, #0b0f19 100%)";
-    // Foggy Night
-    if (code >= 45 && code <= 48) return "linear-gradient(145deg, #1f2937 0%, #374151 50%, #111827 100%)";
-    // Drizzle / Rain Night
-    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "linear-gradient(145deg, #0a1128 0%, #1c2541 50%, #090d16 100%)";
-    // Snow Night
-    if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return "linear-gradient(145deg, #1e293b 0%, #334155 50%, #0f172a 100%)";
-    // Thunderstorm Night
-    if (code >= 95 && code <= 99) return "linear-gradient(145deg, #0b0c10 0%, #1a103c 45%, #050508 100%)";
-    return "linear-gradient(145deg, #0b132b 0%, #1c2541 50%, #090d16 100%)";
-  }
-
-  // Daytime (isDay !== 0) - Warm, radiant, non-glare daytime skies
-  if (isFreezing || (code >= 71 && code <= 77) || (code >= 85 && code <= 86)) {
-    return "linear-gradient(145deg, #1e3a5f 0%, #2b4c7e 45%, #60a5fa 85%, #dbeafe 100%)";
-  }
-  // Clear Sky / Sunny
-  if (code === 0) return "linear-gradient(135deg, #0284c7 0%, #38bdf8 45%, #0369a1 100%)";
-  // Partly Cloudy
-  if (code >= 1 && code <= 3) return "linear-gradient(135deg, #0ea5e9 0%, #3b82f6 50%, #1d4ed8 100%)";
-  // Foggy
-  if (code >= 45 && code <= 48) return "linear-gradient(145deg, #334155 0%, #475569 50%, #1e293b 100%)";
-  // Drizzle / Rain
-  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "linear-gradient(145deg, #1e293b 0%, #1e3a5f 50%, #0f172a 100%)";
-  // Snow
-  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return "linear-gradient(145deg, #334155 0%, #475569 45%, #1e293b 100%)";
-  // Thunderstorm
-  if (code >= 95 && code <= 99) return "linear-gradient(145deg, #18181b 0%, #2e1065 50%, #09090b 100%)";
-
-  return getTimeBasedGradient();
 };
 
 function App() {
@@ -298,7 +227,7 @@ function App() {
 
   const handleLocateMe = () => {
     if (!navigator.geolocation) {
-      setError("Geolocation is not supported by your browser.");
+      setError("This browser can't share your location.");
       return;
     }
     setIsLocating(true);
@@ -309,25 +238,27 @@ function App() {
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
-          const detectedCity = await getCityFromCoords(latitude, longitude);
+          const place = await getCityFromCoords(latitude, longitude);
+          const detectedCity = place.name;
           const weatherData = await getWeather(latitude, longitude);
 
           setCity(detectedCity);
           setWeather({
             name: detectedCity,
+            countryCode: place.countryCode,
             current: weatherData.current,
             daily: weatherData.daily,
             hourly: weatherData.hourly,
           });
         } catch {
-          setError("Unable to fetch weather for your location.");
+          setError("The forecast for your location didn't load.");
         } finally {
           setLoading(false);
           setIsLocating(false);
         }
       },
       () => {
-        setError("Location permission denied or unavailable.");
+        setError("We couldn't get your location.");
         setLoading(false);
         setIsLocating(false);
       },
@@ -1055,30 +986,39 @@ function App() {
       const geoData = await getCoordinates(searchCity);
 
       if (!geoData.results || geoData.results.length === 0) {
-        setError("City not found. Please try again.");
+        setError(`We couldn't find "${searchCity}".`);
         setLoading(false);
         return;
       }
 
-      const { latitude, longitude, name } = geoData.results[0];
+      const { latitude, longitude, name, country, country_code, admin1 } = geoData.results[0];
       const weatherData = await getWeather(latitude, longitude);
 
       setWeather({
         name,
+        countryCode: country_code || null,
+        region: [admin1, country].filter((part) => part && part !== name).slice(-1)[0],
         current: weatherData.current,
         daily: weatherData.daily,
         hourly: weatherData.hourly,
       });
     } catch {
-      setError("Failed to fetch weather data.");
+      setError("The forecast didn't load.");
     } finally {
       setLoading(false);
     }
   };
 
-  const bgGradient = weather?.current
-    ? getBackgroundGradient(weather.current.weather_code, weather.current.is_day, weather.current.temperature_2m)
-    : getTimeBasedGradient();
+  const mood = useMemo(
+    () => getMood(weather, import.meta.env.DEV ? new URLSearchParams(location.search).get("effect") : null),
+    [weather]
+  );
+  const sceneSrc = useMemo(() => paintScene(mood), [mood]);
+
+  // A new place starts at the top, with its temperature in view.
+  useEffect(() => {
+    if (weather) window.scrollTo({ top: 0 });
+  }, [weather]);
 
   if (easterEggType) {
     const videoSrc = `/${easterEggType}.mp4`;
@@ -1086,7 +1026,7 @@ function App() {
     return (
       <div className="easter-egg-container">
         <div className="easter-egg-top-bar">
-          <div className="easter-egg-info glass">
+          <div className="easter-egg-info">
             <span className="live-dot"></span>
             <span className="easter-egg-title">
               {ANIME_TITLES[easterEggType] || easterEggType.toUpperCase()}
@@ -1103,7 +1043,7 @@ function App() {
                   <span className="easter-egg-discovery-text">
                     <span className="discovery-dot-sep">•</span>
                     <Sparkles size={13} className="discovery-sparkle-gold" />
-                    <span className="discovery-gradient-words">Discovered! Added to Vault</span>
+                    <span className="discovery-gradient-words">New find, added to the vault</span>
                   </span>
                 </motion.div>
               )}
@@ -1112,7 +1052,7 @@ function App() {
           <div className="easter-egg-actions">
             <button
               type="button"
-              className="easter-egg-control-btn glass"
+              className="easter-egg-control-btn"
               onClick={() => {
                 const nextState = !isMuted;
                 setIsMuted(nextState);
@@ -1136,7 +1076,7 @@ function App() {
                 setEasterEggType(null);
                 setCity(""); // Reset to default
               }}
-              title="Exit Peak (ESC)"
+              title="Exit Peak (Esc)"
             >
               <LogOut size={16} />
               <span>Exit Peak</span>
@@ -1153,51 +1093,35 @@ function App() {
     );
   }
 
+  const goHome = () => {
+    setWeather(null);
+    setError("");
+    setCity("");
+  };
+
   return (
-    <div className="app-container">
-      <CursorAura />
+    <div className="app" style={{ "--tint": mood.tint, "--sky": mood.sky[1] }}>
+      <RainGlassBackground src={sceneSrc} rain={mood.rain} drops={mood.drops} fogAmount={mood.fogAmount} fog={mood.fog} />
 
-      <div
-        className="bg-wrapper"
-        style={{ background: bgGradient }}
-      />
+      <WeatherEffectsCanvas effect={mood.effect} thunder={mood.thunder} />
 
-      {weather?.current && (
-        <WeatherEffectsCanvas
-          weatherCode={weather.current.weather_code}
-          temperature={weather.current.temperature_2m}
-          snowfall={weather.current.snowfall}
-        />
-      )}
-
-      <div className="content-wrapper">
-        <motion.div
-          className="title-container"
-          initial={{ y: -50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, type: "spring" }}
+      <header className="topbar">
+        <a
+          className="wordmark"
+          href="/"
+          onClick={(e) => {
+            e.preventDefault();
+            goHome();
+          }}
         >
-          <h1>
-            <Mountain className="title-icon" size={40} />
-            Peak Weather
-          </h1>
-          
-          <div className="header-actions">
-            <button
-              type="button"
-              className="unit-toggle-pill glass"
-              onClick={toggleUnit}
-              title="Toggle °C / °F"
-              aria-label="Toggle Celsius and Fahrenheit"
-            >
-              <span className={unit === "C" ? "active-unit" : ""}>°C</span>
-              <span className="unit-divider">|</span>
-              <span className={unit === "F" ? "active-unit" : ""}>°F</span>
-            </button>
-          </div>
-        </motion.div>
+          <span className="wordmark-mark">
+            <Mountain size={24} strokeWidth={2.25} aria-hidden="true" />
+          </span>
+          Peak Weather
+        </a>
 
         <SearchBar
+          key={weather ? "with-weather" : "home"}
           city={city}
           setCity={setCity}
           onSearch={handleSearch}
@@ -1205,64 +1129,64 @@ function App() {
           isLocating={isLocating}
         />
 
+        <div className="units" role="group" aria-label="Temperature unit">
+          <button type="button" aria-pressed={unit === "C"} onClick={() => unit !== "C" && toggleUnit()}>
+            °C
+          </button>
+          <button type="button" aria-pressed={unit === "F"} onClick={() => unit !== "F" && toggleUnit()}>
+            °F
+          </button>
+        </div>
+      </header>
+
+      <main className="stage">
         <AnimatePresence mode="wait">
-          {loading && <SkeletonCard key="loading" />}
-
-          {error && (
-            <motion.div
-              key="error"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              style={{ color: "#fca5a5", fontSize: "1.2rem", fontWeight: "500" }}
-            >
-              {error}
+          {loading ? (
+            <motion.div key="loading" exit={{ opacity: 0 }}>
+              <SkeletonCard />
             </motion.div>
-          )}
-
-          {!loading && !error && weather && (
-            <motion.div
-              key="weather"
-              initial={{ opacity: 0, y: 40 }}
+          ) : error ? (
+            <motion.section
+              key="error"
+              className="notice"
+              role="alert"
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -40 }}
-              transition={{ duration: 0.5 }}
-              style={{ width: "100%" }}
+              exit={{ opacity: 0 }}
             >
-              <WeatherCard
-                weather={weather}
+              <h1 className="notice-title">{error}</h1>
+              <p>Search for a city by name, check the spelling, or try a nearby larger town. If you are offline, reconnect first.</p>
+              <button type="button" className="button-primary" onClick={goHome}>
+                Back to the start
+              </button>
+            </motion.section>
+          ) : weather ? (
+            <motion.div key={`weather-${weather.name}`} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }}>
+              <WeatherCard weather={weather} unit={unit} convertTemp={convertTemp} />
+            </motion.div>
+          ) : (
+            <motion.div key="home" exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }}>
+              <PopularCities
                 unit={unit}
                 convertTemp={convertTemp}
+                onLocateMe={handleLocateMe}
+                isLocating={isLocating}
+                onCityClick={(selectedCity) => {
+                  setCity(selectedCity);
+                  handleSearch(selectedCity);
+                }}
               />
             </motion.div>
           )}
-
-          {!loading && !error && !weather && (
-            <PopularCities
-              unit={unit}
-              convertTemp={convertTemp}
-              onCityClick={(selectedCity) => {
-                setCity(selectedCity);
-                handleSearch(selectedCity);
-              }}
-            />
-          )}
         </AnimatePresence>
-      </div>
-
-      <FloatingElements
-        weatherCode={weather?.current?.weather_code}
-        isDay={weather?.current?.is_day}
-        temperature={weather?.current?.temperature_2m}
-        snowfall={weather?.current?.snowfall}
-      />
+      </main>
 
       {/* Floating Mystery Anime Vault Button & Milestone Popup (Fixed Bottom-Right) */}
       <div className="floating-vault-container">
         <AnimatePresence>
           {showMilestoneToast && (
             <motion.div
-              className="vault-milestone-toast glass"
+              className="vault-milestone-toast"
               onClick={() => {
                 setIsVaultOpen(true);
                 setShowMilestoneToast(false);
@@ -1276,8 +1200,8 @@ function App() {
                 <Key size={16} className="milestone-toast-key" />
               </div>
               <div className="milestone-toast-text">
-                <strong>Master Key Unlocked</strong>
-                <span>10 Anime Discovered</span>
+                <strong>Master key unlocked</strong>
+                <span>10 anime found</span>
               </div>
             </motion.div>
           )}
@@ -1285,10 +1209,10 @@ function App() {
 
         <motion.button
           type="button"
-          className="floating-vault-fab glass"
+          className="floating-vault-fab"
           onClick={() => setIsVaultOpen(true)}
           aria-label="Secret Anime Vault"
-          title="✨ Secret Anime Vault"
+          title="Secret anime vault"
           whileHover={{ scale: 1.12, rotate: 8 }}
           whileTap={{ scale: 0.92 }}
           initial={{ scale: 0, opacity: 0 }}
@@ -1296,7 +1220,6 @@ function App() {
           transition={{ delay: 0.4, type: "spring", stiffness: 350, damping: 22 }}
         >
           <Sparkles size={24} className="fab-sparkle-icon" />
-          <span className="fab-pulse-aura"></span>
           {discoveredAnime.length > 0 && (
             <span className="fab-discovery-badge">
               {discoveredAnime.length}
@@ -1336,14 +1259,25 @@ function App() {
         }}
       />
 
-      <footer>
-        <p>© 2026 Peak Weather — By Shivansh Pandey. All Rights Reserved.</p>
-        <div className="socials">
-          <a href="https://github.com/pandeyshivansh-tech" target="_blank" rel="noopener noreferrer"><i className="fab fa-github"></i></a>
-          <a href="https://www.linkedin.com/in/shivansh-pandey-87bab5373" target="_blank" rel="noopener noreferrer"><i className="fab fa-linkedin"></i></a>
-          <a href="https://x.com/itshivanshere" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-x-twitter"></i></a>
-          <a href="https://www.instagram.com/itshivanshere?igsh=b3FsZWh3ZnlydDd5" target="_blank" rel="noopener noreferrer"><i className="fab fa-instagram"></i></a>
+      <footer className="footer">
+        <div className="footer-credits">
+          <p className="footer-maker">
+            Made by <strong>Shivansh Pandey</strong>
+          </p>
+          <p className="footer-app">Peak Weather</p>
         </div>
+        <nav className="socials" aria-label="Shivansh Pandey elsewhere">
+          <a href="https://github.com/pandeyshivansh-tech" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i className="fab fa-github" aria-hidden="true"></i></a>
+          <a href="https://www.linkedin.com/in/shivansh-pandey-87bab5373" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i className="fab fa-linkedin" aria-hidden="true"></i></a>
+          <a href="https://x.com/itshivanshere" target="_blank" rel="noopener noreferrer" aria-label="X"><i className="fa-brands fa-x-twitter" aria-hidden="true"></i></a>
+          <a href="https://www.instagram.com/itshivanshere?igsh=b3FsZWh3ZnlydDd5" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i className="fab fa-instagram" aria-hidden="true"></i></a>
+        </nav>
+        <p className="footer-source">
+          Forecast data from
+          <a className="source-chip" href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">
+            Open-Meteo <ArrowUpRight size={11} aria-hidden="true" />
+          </a>
+        </p>
       </footer>
     </div>
   );

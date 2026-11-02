@@ -1,0 +1,768 @@
+/* The anime vault, its button and the full-screen player. Same world as the
+   rest of the site: Outfit, thin large type, sentence case, panels tinted
+   from the sky (--panel-solid), one warm accent (--accent), pill controls. */
+
+/* ---------- Vault button and milestone toast ---------- */
+
+.floating-vault-container {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 99999;
+}
+
+.floating-vault-fab {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  color: var(--accent);
+  background: var(--panel-solid);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.32);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.floating-vault-fab:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.fab-discovery-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 0 0 3px rgb(var(--tint));
+}
+
+.vault-milestone-toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px 10px 10px;
+  border-radius: 999px;
+  background: var(--panel-solid);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.32);
+  cursor: pointer;
+  white-space: nowrap;
+  transform-origin: right center;
+  transition: background 0.2s ease;
+}
+
+.vault-milestone-toast:hover {
+  background: rgb(var(--tint) / 1);
+}
+
+.milestone-toast-icon-wrap {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.milestone-toast-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.milestone-toast-text strong {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.milestone-toast-text span {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+/* ---------- Vault ---------- */
+
+.vault-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(4, 8, 20, 0.62);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.vault-modal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 1040px;
+  max-height: 90vh;
+  padding: 32px;
+  border-radius: var(--radius);
+  background: var(--panel-solid);
+  color: var(--ink);
+  font-family: var(--font);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.vault-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.vault-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.vault-title-box h2 {
+  margin-right: 8px;
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.vault-count-badge,
+.vault-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 15px;
+  color: var(--ink-2);
+}
+
+.vault-status-chip.ready,
+.vault-status-chip.master {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+
+.vault-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+.vault-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background 0.2s ease, transform 0.15s var(--ease);
+}
+
+.vault-action-btn:active {
+  transform: scale(0.97);
+}
+
+.vault-action-btn.unlock-btn {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.vault-action-btn.unlock-btn:hover {
+  background: #ffe1a3;
+}
+
+.vault-action-btn.relock-btn {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.vault-action-btn.relock-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.vault-close-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transition: background 0.2s ease, transform 0.15s var(--ease);
+}
+
+.vault-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.vault-close-btn:active {
+  transform: scale(0.92);
+}
+
+/* Progress toward the master key */
+
+.vault-progress-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.progress-text {
+  color: var(--ink-2);
+}
+
+.progress-count-pill {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.progress-count-pill strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.vault-progress-track {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+}
+
+.vault-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+  transition: width 0.5s var(--ease);
+}
+
+/* Search and categories */
+
+.vault-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.vault-search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 8px 0 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vault-search-wrapper:focus-within {
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.75);
+}
+
+.vault-search-icon {
+  flex: none;
+  color: var(--ink-2);
+}
+
+.vault-search-wrapper input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+}
+
+.vault-search-wrapper input::placeholder {
+  color: var(--ink-3);
+}
+
+.vault-clear-search,
+.vault-search-kbd {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+.vault-clear-search:hover {
+  background: var(--hover);
+  color: var(--ink);
+}
+
+.vault-category-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.vault-cat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--ink-2);
+  font-size: 16px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.vault-cat-pill:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--ink);
+}
+
+.vault-cat-pill.active {
+  background: var(--ink);
+  color: #0d1526;
+  font-weight: 500;
+}
+
+.cat-pill-badge {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+.vault-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 48px);
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #0d1526;
+  font-size: 16px;
+  font-weight: 500;
+  transform: translateX(-50%);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+}
+
+.vault-toast-icon {
+  flex: none;
+  color: #8a5a00;
+}
+
+/* The cards */
+
+.vault-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 2px 4px 4px 2px;
+  margin: 0 -4px 0 -2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.vault-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 84px;
+  padding: 16px 16px 16px 20px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s var(--ease);
+}
+
+.vault-card:hover {
+  background: rgba(255, 255, 255, 0.17);
+}
+
+.vault-card:active {
+  transform: scale(0.985);
+}
+
+.vault-card.locked-card {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.vault-card.locked-card:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.vault-card.honourable-card {
+  background: rgb(255 210 122 / 0.16);
+}
+
+.vault-card.honourable-card:hover {
+  background: rgb(255 210 122 / 0.26);
+}
+
+.vault-card-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vault-card-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.vault-card-name {
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.vault-card-anime {
+  font-size: 15px;
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.locked-name {
+  color: var(--ink-2);
+  font-weight: 400;
+}
+
+.locked-hint {
+  color: var(--ink-3);
+}
+
+.locked-genre-pill,
+.honourable-badge,
+.discovered-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.honourable-badge,
+.locked-genre-pill.honourable-pill {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.honourable-name {
+  color: var(--accent);
+}
+
+.vault-card-play-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #0d1526;
+  transition: transform 0.2s var(--ease);
+}
+
+.vault-card:hover .vault-card-play-icon {
+  transform: scale(1.08);
+}
+
+.vault-card-play-icon.honourable-play-icon {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.vault-card-play-icon.locked-icon-badge {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--ink-3);
+}
+
+.shake-locked {
+  animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-6px); }
+  40%, 60% { transform: translateX(6px); }
+}
+
+.vault-empty {
+  grid-column: 1 / -1;
+  padding: 48px 16px;
+  text-align: center;
+  font-size: 19px;
+  color: var(--ink-2);
+}
+
+.vault-empty-discovered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.vault-empty-sub {
+  max-width: 40ch;
+  font-size: 16px;
+  color: var(--ink-3);
+}
+
+.vault-empty-sub strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.vault-reset-section {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding: 20px 0 4px;
+}
+
+.vault-danger-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffb4b4;
+  font-size: 16px;
+  transition: background 0.2s ease;
+}
+
+.vault-danger-reset-btn:hover {
+  background: rgb(255 120 120 / 0.22);
+}
+
+/* ---------- Full-screen player ---------- */
+
+.easter-egg-container {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  font-family: var(--font);
+}
+
+.easter-egg-iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.easter-egg-top-bar {
+  position: absolute;
+  top: 28px;
+  left: 28px;
+  right: 28px;
+  z-index: 10001;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.easter-egg-info {
+  display: inline-flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: rgba(8, 14, 28, 0.7);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.live-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-right: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: blink 1.6s ease-in-out infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0.35; }
+}
+
+.easter-egg-title {
+  font-size: 17px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.easter-egg-badge-wrapper {
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.easter-egg-discovery-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--accent);
+}
+
+.discovery-dot-sep {
+  color: var(--ink-3);
+}
+
+.discovery-sparkle-gold {
+  flex: none;
+  color: var(--accent);
+}
+
+.easter-egg-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.easter-egg-control-btn,
+.close-easter-egg {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background 0.2s ease, transform 0.15s var(--ease);
+}
+
+.easter-egg-control-btn {
+  background: rgba(8, 14, 28, 0.7);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.easter-egg-control-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.close-easter-egg {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.close-easter-egg:hover {
+  background: #ffe1a3;
+}
+
+.easter-egg-control-btn:active,
+.close-easter-egg:active {
+  transform: scale(0.97);
+}
+
+/* ---------- Phone ---------- */
+
+@media (max-width: 720px) {
+  .vault-backdrop {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .vault-modal {
+    gap: 16px;
+    max-height: 94vh;
+    padding: 22px 18px 18px;
+    border-radius: 24px;
+  }
+
+  .vault-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .floating-vault-container {
+    right: 20px;
+    bottom: 20px;
+  }
+
+  .floating-vault-fab {
+    width: 52px;
+    height: 52px;
+  }
+
+  .easter-egg-top-bar {
+    top: 14px;
+    left: 14px;
+    right: 14px;
+  }
+
+  .easter-egg-control-btn,
+  .close-easter-egg {
+    padding: 0 16px;
+  }
+}

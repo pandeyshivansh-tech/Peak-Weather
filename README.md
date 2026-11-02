@@ -1,31 +1,16 @@
-# ⛰️ Peak Weather
+# Peak Weather
 
-A clean, minimal weather app built with React. Search any city in the world and get instant, real-time weather info.
+A weather app built with React and Vite. Search a city for current conditions, the next 24 hours and a 7-day outlook. The background is a pane of glass that reacts to the weather: rain beads and runs, fog can be wiped clear, snow frosts the window, and arid regions get blowing sand.
 
----
+Forecast data comes from [Open-Meteo](https://open-meteo.com/), which needs no API key.
 
-## Features
+## Run it
 
-- 🌍 Search any city worldwide
-- 🌡️ Current temperature, feels-like, humidity, wind speed & UV index
-- 📅 7-day forecast
-- 🎨 Background changes based on the weather (sunny, rainy, stormy, snowy…)
-- 🏙️ Popular city shortcuts on the home screen
-- ⚡ No API key required — uses the free Open-Meteo API (https://open-meteo.com/)
+```bash
+npm install
+npm run dev
+```
 
----
+Live site: https://peakweather.netlify.app/
 
-## 🎌 Psst…
-
-Some searches won't show weather at all.  
-Try typing the name of your favourite anime and see what happens.
-
----
-
-## Deployed
-
-https://peakweather.netlify.app/
-
----
-
-© 2026 Peak Weather — By Shivansh Pandey
+Made by Shivansh Pandey

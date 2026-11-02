@@ -13,6 +13,7 @@ import {
   ShieldAlert,
   Flame,
   Database,
+  Crown,
 } from "lucide-react";
 
 export const ANIME_CHARACTERS = [
@@ -157,9 +158,9 @@ export default function AnimeVaultModal({
   }, []);
 
   const categories = useMemo(() => [
-    { id: "all", label: "All Anime", count: categoryCounts.all },
-    { id: "discovered", label: "✨ Found", count: totalDiscoveredCount },
-    { id: "honourable", label: "👑 Honourables", count: 5, special: true },
+    { id: "all", label: "All", count: categoryCounts.all },
+    { id: "discovered", label: "Found", count: totalDiscoveredCount },
+    { id: "honourable", label: "Honourables", count: 5, special: true },
     { id: "action", label: "Action", count: categoryCounts.action },
     { id: "hype", label: "Hype", count: categoryCounts.hype },
     { id: "dark", label: "Dark", count: categoryCounts.dark },
@@ -218,8 +219,8 @@ export default function AnimeVaultModal({
       const isHonourable = char.category === "honourable";
       setToastMessage(
         isHonourable
-          ? "👑 Search this character in the search bar to unlock"
-          : "✨ Search for this anime in the search bar to unlock"
+          ? "Search this character in the search bar to unlock"
+          : "Search for this anime in the search bar to unlock"
       );
 
       setTimeout(() => {
@@ -240,7 +241,7 @@ export default function AnimeVaultModal({
           transition={{ duration: 0.15 }}
         >
           <motion.div
-            className="vault-modal glass"
+            className="vault-modal" role="dialog" aria-modal="true" aria-labelledby="vault-title"
             onClick={(e) => e.stopPropagation()}
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -251,18 +252,18 @@ export default function AnimeVaultModal({
             <div className="vault-header">
               <div className="vault-title-box">
                 <div className="vault-title-row">
-                  <h2>Anime Vault</h2>
+                  <h2 id="vault-title">Anime vault</h2>
                   <span className="vault-count-badge">
-                    {totalDiscoveredCount}/55 Discovered
+                    {totalDiscoveredCount} of 55 found
                   </span>
                   {!isVaultUnlocked && (
                     canMasterUnlock ? (
                       <span className="vault-status-chip ready">
-                        <Key size={11} /> Key Unlocked
+                        <Key size={13} /> Key unlocked
                       </span>
                     ) : (
                       <span className="vault-status-chip tracking">
-                        <Flame size={11} /> {standardDiscoveredCount}/10 to Key
+                        <Flame size={13} /> {standardDiscoveredCount} of 10 for the key
                       </span>
                     )
                   )}
@@ -274,10 +275,10 @@ export default function AnimeVaultModal({
                   <button
                     className="vault-action-btn unlock-btn"
                     onClick={() => onUnlockVault?.()}
-                    title="Unlock Entire Vault"
+                    title="Unlock the whole vault"
                   >
                     <Key size={14} />
-                    <span>Unlock Vault</span>
+                    <span>Unlock vault</span>
                   </button>
                 )}
                 {isVaultUnlocked && onLockVault && (
@@ -287,7 +288,7 @@ export default function AnimeVaultModal({
                     title="Lock Vault to continue discovering manually"
                   >
                     <Lock size={13} />
-                    <span>Re-Lock</span>
+                    <span>Lock again</span>
                   </button>
                 )}
                 <button className="vault-close-btn" onClick={onClose} aria-label="Close">
@@ -302,7 +303,7 @@ export default function AnimeVaultModal({
                 <div className="vault-progress-bar-wrap">
                   <div className="vault-progress-header">
                     <span className="progress-text">
-                      Hunt to Unlock Master Key
+                      Find 10 anime to earn the master key
                     </span>
                     <span className="progress-count-pill">
                       <strong>{standardDiscoveredCount}</strong> / 10
@@ -325,7 +326,7 @@ export default function AnimeVaultModal({
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="Search anime or character... (Press / to search)"
+                  placeholder="Search anime or character"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleSearchKeyDown}
@@ -408,11 +409,11 @@ export default function AnimeVaultModal({
                                 {char.name}
                               </h4>
                               {isHonourable && (
-                                <span className="honourable-badge">👑 OP</span>
+                                <span className="honourable-badge"><Crown size={12} aria-hidden="true" /> OP</span>
                               )}
                               {isDiscovered && isVaultUnlocked && !isHonourable && (
                                 <span className="discovered-badge" title="Discovered">
-                                  <Sparkles size={9} /> Found
+                                  <Sparkles size={11} /> Found
                                 </span>
                               )}
                             </div>
@@ -422,14 +423,14 @@ export default function AnimeVaultModal({
                           <>
                             <div className="vault-card-title-row">
                               <span className={`locked-genre-pill ${isHonourable ? "honourable-pill" : ""}`}>
-                                {isHonourable ? "👑 OP" : char.category.toUpperCase()}
+                                {isHonourable ? "OP" : char.category}
                               </span>
                               <h4 className={`vault-card-name locked-name ${isHonourable ? "honourable-name" : ""}`}>
                                 {isHonourable ? "Secret Honourable" : "Mystery Anime"}
                               </h4>
                             </div>
                             <p className="vault-card-anime locked-hint">
-                              Search character to reveal
+                              Search its name to reveal
                             </p>
                           </>
                         )}
@@ -480,7 +481,7 @@ export default function AnimeVaultModal({
                     title="Reset all progress and lock vault"
                   >
                     <RotateCcw size={13} />
-                    <span>Reset All Discovery Progress</span>
+                    <span>Reset all progress</span>
                   </button>
                 </div>
               )}

@@ -1,15 +1,16 @@
+// Holds the forecast's shape while it loads, so nothing jumps when it lands.
 export default function SkeletonCard() {
   return (
-    <div className="weather-dashboard glass">
-      <div className="main-card skeleton-shimmer" style={{ minHeight: "260px" }}></div>
-      <div className="dashboard-right">
-        <div className="details-grid">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="detail-item skeleton-shimmer" style={{ height: "76px" }}></div>
-          ))}
-        </div>
-        <div className="forecast-section skeleton-shimmer" style={{ height: "140px" }}></div>
-        <div className="forecast-section skeleton-shimmer" style={{ height: "200px" }}></div>
+    <div className="forecast" aria-busy="true" aria-label="Loading the forecast">
+      <section className="now">
+        <span className="bone" style={{ width: 180, height: 28 }} />
+        <span className="bone" style={{ width: 260, height: 180, marginTop: 24 }} />
+        <span className="bone" style={{ width: 200, height: 28, marginTop: 16 }} />
+        <span className="bone" style={{ width: 280, height: 20, marginTop: 16 }} />
+      </section>
+      <div className="column">
+        <div className="panel bone-panel" style={{ height: 220 }} />
+        <div className="panel bone-panel" style={{ height: 420 }} />
       </div>
     </div>
   );

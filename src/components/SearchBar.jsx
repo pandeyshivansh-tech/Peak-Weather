@@ -89,30 +89,25 @@ export default function SearchBar({ city, setCity, onSearch, onLocateMe, isLocat
   };
 
   return (
-    <motion.div 
-      className="search-container"
-      ref={searchContainerRef}
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-    >
-      <div className="search-input-wrapper">
-        <Search className="search-icon" size={20} />
+    <div className="search" ref={searchContainerRef}>
+      <div className="search-field">
+        <Search className="search-icon" size={18} aria-hidden="true" />
         <input
           value={inputValue}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onFocus={() => setShowHistory(true)}
-          placeholder="Search city or anime..."
+          placeholder="Search for a city"
           className="search-input"
           autoComplete="off"
           spellCheck="false"
-          aria-label="Search city or anime"
+          aria-label="Search for a city"
+          enterKeyHint="search"
         />
         {inputValue && (
           <button
             type="button"
-            className="clear-search-btn"
+            className="icon-button"
             onClick={() => {
               setInputValue("");
               setCity("");
@@ -125,52 +120,52 @@ export default function SearchBar({ city, setCity, onSearch, onLocateMe, isLocat
         )}
         <button
           type="button"
-          className={`locate-me-btn ${isLocating ? "locating" : ""}`}
+          className="icon-button"
           onClick={() => {
             setShowHistory(false);
             onLocateMe();
           }}
-          title="Use my current location"
-          aria-label="Use my current location"
+          title="Use my location"
+          aria-label="Use my location"
           disabled={isLocating}
         >
-          <MapPin size={20} className={isLocating ? "pulse-icon" : ""} />
+          <MapPin size={18} className={isLocating ? "pulse-icon" : ""} />
         </button>
       </div>
 
       <AnimatePresence>
         {showHistory && history.length > 0 && (
           <motion.div
-            className="history-dropdown glass"
-            initial={{ opacity: 0, y: -10, scaleY: 0.95 }}
-            animate={{ opacity: 1, y: 0, scaleY: 1 }}
-            exit={{ opacity: 0, y: -15, scaleY: 0.95 }}
-            transition={{ duration: 0.2 }}
+            className="history"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18 }}
           >
-            <div className="history-header">
-              <History size={14} />
-              <span>Recent Searches</span>
-            </div>
-            {history.map((item) => (
-              <div
-                key={item}
-                className="history-item"
-                onClick={() => handleSelectHistory(item)}
-              >
-                <span>{item}</span>
-                <button
-                  type="button"
-                  className="remove-history-btn"
-                  onClick={(e) => handleClearHistoryItem(e, item)}
-                  title="Remove from history"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ))}
+            <p className="history-title">
+              <History size={14} aria-hidden="true" />
+              Recent searches
+            </p>
+            <ul>
+              {history.map((item) => (
+                <li key={item} className="history-item">
+                  <button type="button" className="history-pick" onClick={() => handleSelectHistory(item)}>
+                    {item}
+                  </button>
+                  <button
+                    type="button"
+                    className="icon-button"
+                    onClick={(e) => handleClearHistoryItem(e, item)}
+                    aria-label={`Remove ${item} from recent searches`}
+                  >
+                    <X size={14} />
+                  </button>
+                </li>
+              ))}
+            </ul>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }
