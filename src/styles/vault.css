@@ -396,6 +396,10 @@
 .vault-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  /* Rows hug their tallest card. Without this the rows collapse to the cards'
+     minimum height inside the scroller and long titles spill out of them. */
+  grid-auto-rows: min-content;
+  align-content: start;
   gap: 12px;
   min-height: 0;
   overflow-y: auto;
